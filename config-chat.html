@@ -167,8 +167,8 @@
   const $ = id => document.getElementById(id);
   const BOTS_PADRAO = 'nightbot,streamelements,streamlabs,moobot,fossabot,wizebot,sery_bot,soundalerts,commanderroot';
   const PADRAO = { canal:'teuzin0dev', size:22, max:25, fade:45, emote:1.5, bots:true, cmds:false, ext:true, avatar:false, debug:false, hide:'', pre:'', demolink:false, notw:false, plat:false, kick:'', kickid:'', yt:'', ytkey:'', relay:'', meuapp:false, clientid:'', lg_link:false };
-  // Client ID padrao do app do projeto. Fica vazio ate o app ser registrado na Twitch.
-  const CLIENT_ID_PADRAO = '';
+  // Client ID padrao do app do projeto. Aplicativo publico do projeto (OAuth implicito, sem segredo).
+  const CLIENT_ID_PADRAO = 'bnqg3ttxcusgbv0z6dzgmjnln64gn9';
 
   // endereço do chat.html: mesma pasta desta página (ou caminho relativo)
   function base() {
@@ -189,7 +189,7 @@
   }
   function entrarTwitch() {
     const id = clientIdAtual();
-    if (!id) { $('lg_status').textContent = 'Falta o Client ID. Marque "Usar meu próprio aplicativo" e cole o seu (ou aguarde o app oficial do projeto).'; return; }
+    if (!id) { $('lg_status').textContent = 'Falta o Client ID. Marque "Usar meu próprio aplicativo" e cole o seu .'; return; }
     const u = 'https://id.twitch.tv/oauth2/authorize?client_id=' + encodeURIComponent(id) + '&redirect_uri=' + encodeURIComponent(urlRedir()) +
       '&response_type=token&scope=' + encodeURIComponent('chat:read chat:edit') + '&force_verify=true';
     location.href = u;
