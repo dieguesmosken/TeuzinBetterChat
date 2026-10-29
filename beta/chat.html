@@ -446,11 +446,11 @@
     const sala = await acharSalaKick();
     if (!sala) { setStatus('Kick: não achei o número da sala (use &kickid=)'); return; }
     reconectador((ok, cair) => {
-      const ws = new WebSocket('wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0-rc2&flash=false');
+      const ws = new WebSocket('wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0&flash=false');
       ws.onmessage = ev => {
         let d; try { d = JSON.parse(ev.data); } catch (e) { return; }
         if (d.event === 'pusher:connection_established') ws.send(JSON.stringify({ event: 'pusher:subscribe', data: { auth: '', channel: 'chatrooms.' + sala + '.v2' } }));
-        else if (d.event === 'pusher:subscription_succeeded') { ok(); setStatus('Kick conectado ✓'); setTimeout(() => setStatus(''), 2500); }
+        else if ((d.event === 'pusher_internal:subscription_succeeded' || d.event === 'pusher:subscription_succeeded')) { ok(); setStatus('Kick conectado ✓'); setTimeout(() => setStatus(''), 2500); }
         else if (d.event === 'pusher:ping') ws.send(JSON.stringify({ event: 'pusher:pong', data: {} }));
         else if (d.event === 'App\\Events\\ChatMessageEvent') { try { tratarKick(JSON.parse(d.data)); } catch (e) {} }
         else if (d.event === 'App\\Events\\MessageDeletedEvent') {
