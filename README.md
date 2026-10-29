@@ -12,7 +12,7 @@ Widget de chat da Twitch **leve, sem login e sem token**, feito para a *Fonte de
 - **Foto de perfil** de quem fala (opcional).
 - Anúncios, subs, resubs e outros avisos do canal (USERNOTICE).
 - Mensagem apagada, timeout e ban removem a mensagem da tela.
-- Esconde bots e comandos `!` (configurável), destaca primeira mensagem.
+- Esconde bots, comandos `!` e qualquer prefixo que você definir (ex.: `?fd`, `$pescar`), destaca primeira mensagem.
 - Mensagens somem sozinhas depois de N segundos.
 - **Configurador visual** que gera o link pronto para colar no OBS.
 
@@ -22,7 +22,7 @@ Widget de chat da Twitch **leve, sem login e sem token**, feito para a *Fonte de
 
 Com o GitHub Pages ligado, o configurador já entrega um **link da internet** pronto para o OBS, sem precisar de arquivo no PC:
 
-1. Abra `https://SEU-USUARIO.github.io/TeuzinBetterChat/` (o `index.html` leva ao configurador).
+1. Abra `https://www.teuzin.com.br/TeuzinBetterChat/` (ou `https://SEU-USUARIO.github.io/TeuzinBetterChat/`) (o `index.html` leva ao configurador).
 2. Ajuste as opções e clique em **Copiar link**.
 3. No OBS: **Fontes → + → Navegador**, **desmarque** "Arquivo local" e cole o link na URL.
 
@@ -49,6 +49,7 @@ Se preferir apontar para o arquivo, marque "Arquivo local" e escolha `chat.html`
 | `fade` | `45` | Some depois de N segundos (`0` = nunca) |
 | `emote` | `1.5` | Tamanho dos emotes |
 | `hide` | lista de bots | Contas escondidas, separadas por vírgula. `hide=` vazio mostra todos os bots |
+| `pre` | vazio | Esconde mensagens que **começam** com esses textos, separados por vírgula ou espaço. Ex.: `pre=?fd,$pescar` (não diferencia maiúsculas) |
 | `cmds` | `0` | `1` mostra comandos que começam com `!` |
 | `ext` | `1` | `0` desliga emotes 7TV/BTTV/FFZ |
 | `avatar` | `0` | `1` mostra a foto de perfil |

@@ -15,6 +15,7 @@
     &fade=45              some depois de N segundos (0 = nunca)
     &hide=nightbot,streamelements,streamlabs,moobot,fossabot
                           contas ocultas (bots); &hide= (vazio) mostra todos os bots
+    &pre=?fd,$pescar      esconde mensagens que COMECAM com esses textos (separe por virgula ou espaco)
     &cmds=0               1 = mostrar comandos que comecam com !
     &emote=1.0            tamanho dos emotes em "em"
     &ext=1                1 = emotes 7TV, BTTV e FFZ (padrao ligado; 0 desliga)
@@ -76,6 +77,7 @@
   const MAX   = Math.max(3, parseInt(P.get('max') || '25', 10));
   const FADE  = Math.max(0, parseInt(P.get('fade') || '45', 10));
   const CMDS  = P.get('cmds') === '1';
+  const PREFIXOS = (P.get('pre') || '').toLowerCase().split(/[\s,]+/).filter(Boolean);
   const DEMO  = P.get('demo') === '1';
   const EXT   = P.get('ext') !== '0';
   const DEBUG = P.get('debug') === '1';
@@ -320,6 +322,7 @@
       if (texto.startsWith('\u0001ACTION ')) { acao = true; texto = texto.slice(8).replace(/\u0001$/, ''); }
       if (OCULTOS.has(login)) return;
       if (!CMDS && texto.startsWith('!')) return;
+      if (PREFIXOS.length && PREFIXOS.some(p => texto.toLowerCase().startsWith(p))) return;
       const nome = unesc(tags['display-name']) || login;
       espera.then(() => mostrar({
         id: tags['id'], login, nome, cor: corLegivel(tags['color'], login),

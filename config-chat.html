@@ -107,6 +107,9 @@
       <label class="chk"><input type="checkbox" id="ext" checked><span>Emotes de 7TV, BTTV e FFZ</span></label>
       <label class="chk"><input type="checkbox" id="avatar"><span>Foto de perfil de quem fala<em>busca a foto pública de cada pessoa</em></span></label>
       <label class="chk"><input type="checkbox" id="debug"><span>Modo diagnóstico dos selos<em>deixe desligado na live</em></span></label>
+      <label for="pre">Esconder mensagens que começam com <small>(separe por vírgula ou espaço)</small></label>
+      <input type="text" id="pre" placeholder="ex.: ?fd $pescar !loja" autocomplete="off" spellcheck="false">
+      <label class="chk"><input type="checkbox" id="demolink"><span>Incluir mensagens de teste no link<em>coloca <code>demo=1</code> no link final; tire antes de ir ao ar</em></span></label>
       <label for="hide" id="l_hide">Esconder só estas contas <small>(separe por vírgula)</small></label>
       <input type="text" id="hide" placeholder="ex.: nightbot,moobot" autocomplete="off" spellcheck="false">
     </section>
@@ -134,7 +137,7 @@
 (() => {
   const $ = id => document.getElementById(id);
   const BOTS_PADRAO = 'nightbot,streamelements,streamlabs,moobot,fossabot,wizebot,sery_bot,soundalerts,commanderroot';
-  const PADRAO = { canal:'teuzin0dev', size:22, max:25, fade:45, emote:1.5, bots:true, cmds:false, ext:true, avatar:false, debug:false, hide:'' };
+  const PADRAO = { canal:'teuzin0dev', size:22, max:25, fade:45, emote:1.5, bots:true, cmds:false, ext:true, avatar:false, debug:false, hide:'', pre:'', demolink:false };
 
   // endereço do chat.html: mesma pasta desta página (ou caminho relativo)
   function base() {
@@ -146,7 +149,8 @@
     return {
       canal: ($('canal').value || '').trim().toLowerCase().replace(/^#/, '') || PADRAO.canal,
       size: +$('size').value, max: +$('max').value, fade: +$('fade').value, emote: +$('emote').value,
-      bots: $('bots').checked, cmds: $('cmds').checked, ext: $('ext').checked, avatar: $('avatar').checked, debug: $('debug').checked,
+      bots: $('bots').checked, cmds: $('cmds').checked, ext: $('ext').checked, avatar: $('avatar').checked, debug: $('debug').checked, demolink: $('demolink').checked,
+      pre: ($('pre').value || '').trim().replace(/\s+/g, ' '),
       hide: ($('hide').value || '').replace(/\s+/g, '').toLowerCase()
     };
   }
@@ -161,6 +165,7 @@
     if (c.cmds) q.push('cmds=1');
     if (!c.ext) q.push('ext=0');
     if (c.avatar) q.push('avatar=1');
+    if (c.pre) q.push('pre=' + encodeURIComponent(c.pre).replace(/%20/g, '+').replace(/%2C/g, ','));
     if (c.debug) q.push('debug=1');
     if (demo) q.push('demo=1');
     return base() + '?' + q.join('&');
@@ -175,9 +180,9 @@
     $('o_emote').textContent = c.emote.toFixed(1) + '×';
     $('hide').disabled = false;
     $('l_hide').firstChild.textContent = c.bots ? 'Esconder só estas contas (opcional) ' : 'Contas extras para esconder ';
-    $('url').value = montar(c, false);
+    $('url').value = montar(c, c.demolink);
     clearTimeout(tPrev);
-    tPrev = setTimeout(() => { $('prev').src = montar(c, $('demo').checked); }, 250);
+    tPrev = setTimeout(() => { $('prev').src = montar(c, $('demo').checked || c.demolink); }, 250);
   }
 
   // Nota: com "mostrar bots" ligado e a lista vazia, nenhum bot e escondido.
@@ -193,7 +198,7 @@
   function padrao() {
     $('canal').value = PADRAO.canal; $('size').value = PADRAO.size; $('max').value = PADRAO.max; $('fade').value = PADRAO.fade;
     $('emote').value = PADRAO.emote; $('bots').checked = PADRAO.bots; $('cmds').checked = PADRAO.cmds;
-    $('ext').checked = PADRAO.ext; $('avatar').checked = PADRAO.avatar; $('debug').checked = PADRAO.debug; $('hide').value = PADRAO.hide; atualizar();
+    $('ext').checked = PADRAO.ext; $('avatar').checked = PADRAO.avatar; $('debug').checked = PADRAO.debug; $('demolink').checked = false; $('pre').value = ''; $('hide').value = PADRAO.hide; atualizar();
   }
 
   // guarda as escolhas neste computador (opcional; se o navegador bloquear, segue sem guardar)
@@ -203,7 +208,7 @@
     try {
       const c = JSON.parse(localStorage.getItem(KEY) || 'null'); if (!c) return;
       $('canal').value = c.canal; $('size').value = c.size; $('max').value = c.max; $('fade').value = c.fade; $('emote').value = c.emote;
-      $('bots').checked = c.bots; $('cmds').checked = c.cmds; $('ext').checked = c.ext; $('avatar').checked = !!c.avatar; $('debug').checked = c.debug; $('hide').value = c.hide;
+      $('bots').checked = c.bots; $('cmds').checked = c.cmds; $('ext').checked = c.ext; $('avatar').checked = !!c.avatar; $('debug').checked = c.debug; $('demolink').checked = !!c.demolink; $('pre').value = c.pre || ''; $('hide').value = c.hide;
     } catch (e) {}
   }
 
