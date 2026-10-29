@@ -442,23 +442,10 @@
       return String(j.chatroom && j.chatroom.id || '');
     } catch (e) { return ''; }
   }
-  async function iniciarKick() {
-    const sala = await acharSalaKick();
-    if (!sala) { setStatus('Kick: não achei o número da sala (use &kickid=)'); return; }
-    reconectador((ok, cair) => {
-      const ws = new WebSocket('wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0&flash=false');
-      ws.onmessage = ev => {
-        let d; try { d = JSON.parse(ev.data); } catch (e) { return; }
-        if (d.event === 'pusher:connection_established') ws.send(JSON.stringify({ event: 'pusher:subscribe', data: { auth: '', channel: 'chatrooms.' + sala + '.v2' } }));
-        else if ((d.event === 'pusher_internal:subscription_succeeded' || d.event === 'pusher:subscription_succeeded')) { ok(); setStatus('Kick conectado ✓'); setTimeout(() => setStatus(''), 2500); }
-        else if (d.event === 'pusher:ping') ws.send(JSON.stringify({ event: 'pusher:pong', data: {} }));
-        else if (d.event === 'App\\Events\\ChatMessageEvent') { try { tratarKick(JSON.parse(d.data)); } catch (e) {} }
-        else if (d.event === 'App\\Events\\MessageDeletedEvent') {
-          try { const id = String(JSON.parse(d.data).message.id); chat.querySelectorAll('.msg').forEach(e => { if (e.dataset.id === id) e.remove(); }); } catch (e) {}
-        }
-      };
-      ws.onclose = cair; ws.onerror = () => ws.close();
-    }, 'Kick');
+  // Desde 13/10/2026 o Kick usa um sistema que recusa navegadores de outros sites (o Pusher foi desligado).
+  // O chat do Kick agora chega pelo relay local: node relay.js --kick SEUCANAL  e  &relay=ws://localhost:8787
+  function iniciarKick() {
+    if (!RELAY) setStatus('Kick: precisa do relay local (veja relay/README) e do parâmetro &relay=');
   }
   function tratarKick(m) {
     const login = (m.sender && (m.sender.slug || m.sender.username) || '').toLowerCase();

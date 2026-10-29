@@ -2,7 +2,7 @@
   "name": "teuzinbetterchat-relay",
   "version": "0.1.0",
   "private": true,
-  "description": "Relay local do TikTok para o TeuzinBetterChat",
-  "main": "tiktok-relay.js",
+  "description": "Relay local (Kick e TikTok) para o TeuzinBetterChat",
+  "main": "relay.js",
   "dependencies": { "tiktok-live-connector": "^2.0.0", "ws": "^8.18.0" }
 }

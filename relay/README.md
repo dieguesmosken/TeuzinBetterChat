@@ -1,12 +1,16 @@
-# Relay do TikTok (experimental)
+# Relay local (Kick e TikTok)
 
-O TikTok não tem API oficial para ler o chat de uma live. Por isso o TikTok no TeuzinBetterChat precisa deste
-pequeno programa, que roda **no seu computador** e usa uma biblioteca não oficial.
+Roda **no seu computador** e leva o chat para o `chat.html` e para o `painel.html`.
+
+**Por que o Kick precisa disso:** em 13/10/2026 o Kick desligou o Pusher e passou o chat para outro sistema
+(Centrifugo) que recusa navegadores vindos de outros sites. Um programa local não tem essa limitação.
+O TikTok não tem API oficial e usa uma biblioteca não oficial (experimental).
 
 1. Instale o [Node.js](https://nodejs.org).
 2. Nesta pasta: `npm install`
-3. Com a live do TikTok aberta: `node tiktok-relay.js seu_usuario`
-4. No link do chat, acrescente `&relay=ws://localhost:8787`
+3. Rode: `node relay.js --kick seucanal` (aceita o nome do canal ou o número da sala)
+   e, se quiser o TikTok junto: `node relay.js --kick seucanal --tiktok seu_usuario`
+4. No link do chat acrescente `&relay=ws://localhost:8787`. No painel, o campo "Relay local" já vem com esse endereço.
 
-Avisos: pode quebrar quando o TikTok mudar algo, não foi testado ao vivo e o relay só escuta em `127.0.0.1`.
+O relay só escuta em `127.0.0.1`. Pode quebrar quando Kick/TikTok mudarem algo (os dois são não oficiais).
 Dá para usar o mesmo relay para outras fontes: basta enviar JSON `{plat, id, login, nome, texto, avatar, badges, destaque}`.
