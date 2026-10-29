@@ -90,3 +90,7 @@ O widget só **lê** o chat público. Nada é enviado ao canal e nenhuma credenc
 | TikTok | relay local não oficial | experimental, roda no seu PC |
 
 Beta: Kick, YouTube e TikTok foram testados só com conexões simuladas, ainda não numa live real.
+
+### Painel da Kick (enviar mensagens e moderar)
+`painel.html` entra com a Kick (OAuth + PKCE), envia mensagens como o dono do canal e mostra o chat com botões de apagar, timeout (10 min) e banir.
+Precisa do worker em `kick-worker/` (guarda o segredo do app). Veja `kick-worker/README.md`. Beta, ainda não testado numa conta real da Kick.

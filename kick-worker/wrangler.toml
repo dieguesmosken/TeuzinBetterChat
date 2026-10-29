@@ -1,0 +1,9 @@
+name = "teuzinbetterchat-kick"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+[vars]
+ALLOWED_ORIGIN = "https://www.teuzin.com.br"
+# Os segredos KICK_CLIENT_ID e KICK_CLIENT_SECRET NAO ficam aqui. Use:
+#   npx wrangler secret put KICK_CLIENT_ID
+#   npx wrangler secret put KICK_CLIENT_SECRET
