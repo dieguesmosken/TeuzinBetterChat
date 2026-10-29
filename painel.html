@@ -81,7 +81,10 @@
   $('redir').textContent = redir;
   const ler = (k) => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
   const gravar = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
-  const cfg = Object.assign({ worker: '', cid: '', sala: '' }, ler(KS) || {});
+  // Client ID publico do app da Kick do projeto (nao e segredo). O segredo fica so no worker.
+  const CID_PADRAO = '01M64V54DJYW4HJP3VQ9CAFBYG';
+  const cfg = Object.assign({ worker: '', cid: CID_PADRAO, sala: '' }, ler(KS) || {});
+  if (!cfg.cid) cfg.cid = CID_PADRAO;
   $('worker').value = cfg.worker; $('cid').value = cfg.cid; $('sala').value = cfg.sala;
   const salvarCfg = () => { cfg.worker = $('worker').value.trim().replace(/\/+$/, ''); cfg.cid = $('cid').value.trim(); cfg.sala = $('sala').value.trim(); gravar(KS, cfg); };
   ['worker', 'cid', 'sala'].forEach(i => $(i).addEventListener('input', salvarCfg));
