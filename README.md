@@ -75,3 +75,18 @@ O widget só **lê** o chat público. Nada é enviado ao canal e nenhuma credenc
 ## Licença
 
 [MIT](LICENSE). Feito com 💜 pela matilha do Teyo.
+
+## Versão 2.0 beta: multichat e login (branch `feat/multichat-auth`)
+
+- **Multichat:** Twitch + Kick + YouTube na mesma tela, com selo da plataforma. TikTok via relay local (veja `relay/`).
+- **Login da Twitch (opcional):** o configurador tem o botão "Entrar com a Twitch". Cada streamer pode usar o **próprio Client ID** (registrado em dev.twitch.tv) ou o do projeto, quando existir. O token fica só no seu navegador e só entra no link se você marcar.
+- Parâmetros novos do link: `kick`, `kickid`, `yt`, `ytkey`, `ytint`, `relay`, `plat`, `login`, `token`, e `channel=` vazio para não usar a Twitch.
+
+| Plataforma | Como lê | Observações |
+|---|---|---|
+| Twitch | IRC (anônimo ou autenticado) | já estável |
+| Kick | WebSocket público da sala | não oficial, pode mudar; precisa do número da sala |
+| YouTube | YouTube Data API v3 (consulta periódica) | precisa de chave; a cota diária é limitada |
+| TikTok | relay local não oficial | experimental, roda no seu PC |
+
+Beta: Kick, YouTube e TikTok foram testados só com conexões simuladas, ainda não numa live real.

@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<title>TeuzinBetterChat 1.0 - Configurador</title>
+<title>TeuzinBetterChat 2.0 beta - Configurador</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -101,6 +101,35 @@
     </section>
 
     <section class="moldura">
+      <h2>Outras plataformas <small style="font-weight:500;opacity:.7">(multichat · beta)</small></h2>
+      <label class="chk"><input type="checkbox" id="notw"><span>Não usar a Twitch<em>só as plataformas abaixo</em></span></label>
+      <label class="chk"><input type="checkbox" id="plat"><span>Selo da plataforma em cada mensagem<em>liga sozinho com 2 ou mais fontes</em></span></label>
+      <label for="kick">Kick <small>(nome do canal)</small></label>
+      <input type="text" id="kick" placeholder="ex.: meucanal" autocomplete="off" spellcheck="false">
+      <label for="kickid">Kick <small>(número da sala; abra kick.com/api/v2/channels/SEUCANAL e copie o <code>chatroom → id</code>)</small></label>
+      <input type="text" id="kickid" placeholder="ex.: 12345678" autocomplete="off" spellcheck="false">
+      <label for="yt">YouTube <small>(ID do vídeo da live)</small></label>
+      <input type="text" id="yt" placeholder="ex.: dQw4w9WgXcQ" autocomplete="off" spellcheck="false">
+      <label for="ytkey">YouTube <small>(chave da YouTube Data API v3 · a cota diária é limitada)</small></label>
+      <input type="text" id="ytkey" placeholder="sua chave" autocomplete="off" spellcheck="false">
+      <label for="relay">TikTok / relay <small>(precisa do programa em <code>relay/</code> rodando no seu PC)</small></label>
+      <input type="text" id="relay" placeholder="ex.: ws://localhost:8787" autocomplete="off" spellcheck="false">
+    </section>
+
+    <section class="moldura">
+      <h2>Login da Twitch <small style="font-weight:500;opacity:.7">(opcional)</small></h2>
+      <p class="dica" id="lg_status">Sem login: o chat lê a Twitch de forma anônima, e isso já basta para mostrar o chat.</p>
+      <label class="chk"><input type="checkbox" id="meuapp"><span>Usar meu próprio aplicativo da Twitch<em>cada streamer pode ter o seu Client ID</em></span></label>
+      <div id="blocoapp" hidden>
+        <label for="clientid">Client ID <small>(dev.twitch.tv → Console → Registrar aplicativo)</small></label>
+        <input type="text" id="clientid" placeholder="cole o Client ID aqui" autocomplete="off" spellcheck="false">
+        <p class="dica">URL de redirecionamento do aplicativo: <b id="redir"></b></p>
+      </div>
+      <div class="btns" style="margin-top:8px"><button id="lg_entrar" type="button">Entrar com a Twitch</button><button class="sec" id="lg_sair" type="button" hidden>Sair</button></div>
+      <label class="chk"><input type="checkbox" id="lg_link"><span>Colocar o login no link<em>⚠ o link passa a conter um token que vale como senha. Não mostre na live</em></span></label>
+    </section>
+
+    <section class="moldura">
       <h2>O que mostrar</h2>
       <label class="chk"><input type="checkbox" id="bots" checked><span>Mensagens de bots<em>Nightbot, StreamElements e os outros</em></span></label>
       <label class="chk"><input type="checkbox" id="cmds"><span>Comandos com !<em>ex.: !pix, !teyo</em></span></label>
@@ -118,7 +147,7 @@
   <footer class="barra">
     <div class="avatar" id="av"></div>
     <div class="nome">
-      <h1><span>Teuzin</span>BetterChat 1.0</h1>
+      <h1><span>Teuzin</span>BetterChat 2.0 beta</h1>
       <p>configurador do chat</p>
     </div>
     <div class="link">
@@ -137,7 +166,9 @@
 (() => {
   const $ = id => document.getElementById(id);
   const BOTS_PADRAO = 'nightbot,streamelements,streamlabs,moobot,fossabot,wizebot,sery_bot,soundalerts,commanderroot';
-  const PADRAO = { canal:'teuzin0dev', size:22, max:25, fade:45, emote:1.5, bots:true, cmds:false, ext:true, avatar:false, debug:false, hide:'', pre:'', demolink:false };
+  const PADRAO = { canal:'teuzin0dev', size:22, max:25, fade:45, emote:1.5, bots:true, cmds:false, ext:true, avatar:false, debug:false, hide:'', pre:'', demolink:false, notw:false, plat:false, kick:'', kickid:'', yt:'', ytkey:'', relay:'', meuapp:false, clientid:'', lg_link:false };
+  // Client ID padrao do app do projeto. Fica vazio ate o app ser registrado na Twitch.
+  const CLIENT_ID_PADRAO = '';
 
   // endereço do chat.html: mesma pasta desta página (ou caminho relativo)
   function base() {
@@ -145,19 +176,55 @@
     return new URL('chat.html', location.href).href;   // no GitHub Pages: link https pronto para o OBS
   }
 
+  // ---------- login da Twitch (OAuth, fluxo implicito: tudo no navegador) ----------
+  const KEY_LG = 'teyo-chat-twitch';
+  function sessaoTwitch() { try { const j = JSON.parse(localStorage.getItem(KEY_LG) || 'null'); return j && j.token && j.login ? j : null; } catch (e) { return null; } }
+  function urlRedir() { return location.href.replace(/[?#].*$/, ''); }
+  function clientIdAtual() { return ($('meuapp').checked ? ($('clientid').value || '').trim() : '') || CLIENT_ID_PADRAO; }
+  function statusLogin() {
+    const lg = sessaoTwitch();
+    $('lg_status').textContent = lg ? 'Conectado como ' + lg.login + ' ✓' : 'Sem login: o chat lê a Twitch de forma anônima, e isso já basta para mostrar o chat.';
+    $('lg_sair').hidden = !lg; $('lg_entrar').hidden = !!lg;
+    $('blocoapp').hidden = !$('meuapp').checked; $('redir').textContent = urlRedir();
+  }
+  function entrarTwitch() {
+    const id = clientIdAtual();
+    if (!id) { $('lg_status').textContent = 'Falta o Client ID. Marque "Usar meu próprio aplicativo" e cole o seu (ou aguarde o app oficial do projeto).'; return; }
+    const u = 'https://id.twitch.tv/oauth2/authorize?client_id=' + encodeURIComponent(id) + '&redirect_uri=' + encodeURIComponent(urlRedir()) +
+      '&response_type=token&scope=' + encodeURIComponent('chat:read chat:edit') + '&force_verify=true';
+    location.href = u;
+  }
+  async function voltouDoLogin() {
+    const h = new URLSearchParams(location.hash.replace(/^#/, ''));
+    const tk = h.get('access_token'); if (!tk) return;
+    history.replaceState(null, '', location.pathname + location.search);   // tira o token da barra de endereco
+    try {
+      const r = await fetch('https://id.twitch.tv/oauth2/validate', { headers: { Authorization: 'OAuth ' + tk } });
+      const j = await r.json(); if (!j.login) throw new Error('token inválido');
+      localStorage.setItem(KEY_LG, JSON.stringify({ login: j.login, token: tk, em: Date.now() }));
+    } catch (e) { $('lg_status').textContent = 'Não consegui validar o login: ' + (e.message || e); return; }
+    statusLogin(); atualizar();
+  }
+  function sairTwitch() { try { localStorage.removeItem(KEY_LG); } catch (e) {} statusLogin(); atualizar(); }
+
   function ler() {
     return {
       canal: ($('canal').value || '').trim().toLowerCase().replace(/^#/, '') || PADRAO.canal,
       size: +$('size').value, max: +$('max').value, fade: +$('fade').value, emote: +$('emote').value,
       bots: $('bots').checked, cmds: $('cmds').checked, ext: $('ext').checked, avatar: $('avatar').checked, debug: $('debug').checked, demolink: $('demolink').checked,
       pre: ($('pre').value || '').trim().replace(/\s+/g, ' '),
+      notw: $('notw').checked, plat: $('plat').checked,
+      kick: ($('kick').value || '').trim().toLowerCase(), kickid: ($('kickid').value || '').trim(),
+      yt: ($('yt').value || '').trim(), ytkey: ($('ytkey').value || '').trim(), relay: ($('relay').value || '').trim(),
+      meuapp: $('meuapp').checked, clientid: ($('clientid').value || '').trim(), lg_link: $('lg_link').checked,
       hide: ($('hide').value || '').replace(/\s+/g, '').toLowerCase()
     };
   }
 
   function montar(c, demo) {
     const q = [];
-    if (c.canal !== PADRAO.canal) q.push('channel=' + encodeURIComponent(c.canal));
+    if (c.notw) q.push('channel=');
+    else if (c.canal !== PADRAO.canal) q.push('channel=' + encodeURIComponent(c.canal));
     q.push('size=' + c.size, 'max=' + c.max, 'fade=' + c.fade);
     if (c.emote !== PADRAO.emote) q.push('emote=' + c.emote);
     if (c.bots) q.push('hide=' + encodeURIComponent(c.hide));         // hide= vazio => mostra todos os bots
@@ -167,6 +234,13 @@
     if (c.avatar) q.push('avatar=1');
     if (c.pre) q.push('pre=' + encodeURIComponent(c.pre).replace(/%20/g, '+').replace(/%2C/g, ','));
     if (c.debug) q.push('debug=1');
+    if (c.plat) q.push('plat=1');
+    if (c.kick) q.push('kick=' + encodeURIComponent(c.kick));
+    if (c.kickid) q.push('kickid=' + encodeURIComponent(c.kickid));
+    if (c.yt && c.ytkey) q.push('yt=' + encodeURIComponent(c.yt), 'ytkey=' + encodeURIComponent(c.ytkey));
+    if (c.relay) q.push('relay=' + encodeURIComponent(c.relay));
+    const lg = sessaoTwitch();
+    if (c.lg_link && lg) q.push('login=' + encodeURIComponent(lg.login), 'token=' + encodeURIComponent(lg.token));
     if (demo) q.push('demo=1');
     return base() + '?' + q.join('&');
   }
@@ -181,6 +255,7 @@
     $('hide').disabled = false;
     $('l_hide').firstChild.textContent = c.bots ? 'Esconder só estas contas (opcional) ' : 'Contas extras para esconder ';
     $('url').value = montar(c, c.demolink);
+    statusLogin();
     clearTimeout(tPrev);
     tPrev = setTimeout(() => { $('prev').src = montar(c, $('demo').checked || c.demolink); }, 250);
   }
@@ -198,7 +273,8 @@
   function padrao() {
     $('canal').value = PADRAO.canal; $('size').value = PADRAO.size; $('max').value = PADRAO.max; $('fade').value = PADRAO.fade;
     $('emote').value = PADRAO.emote; $('bots').checked = PADRAO.bots; $('cmds').checked = PADRAO.cmds;
-    $('ext').checked = PADRAO.ext; $('avatar').checked = PADRAO.avatar; $('debug').checked = PADRAO.debug; $('demolink').checked = false; $('pre').value = ''; $('hide').value = PADRAO.hide; atualizar();
+    $('ext').checked = PADRAO.ext; $('avatar').checked = PADRAO.avatar; $('debug').checked = PADRAO.debug; $('demolink').checked = false; $('pre').value = ''; $('hide').value = PADRAO.hide;
+    ['notw','plat','meuapp','lg_link'].forEach(k => $(k).checked = false); ['kick','kickid','yt','ytkey','relay','clientid'].forEach(k => $(k).value = ''); atualizar();
   }
 
   // guarda as escolhas neste computador (opcional; se o navegador bloquear, segue sem guardar)
@@ -209,6 +285,7 @@
       const c = JSON.parse(localStorage.getItem(KEY) || 'null'); if (!c) return;
       $('canal').value = c.canal; $('size').value = c.size; $('max').value = c.max; $('fade').value = c.fade; $('emote').value = c.emote;
       $('bots').checked = c.bots; $('cmds').checked = c.cmds; $('ext').checked = c.ext; $('avatar').checked = !!c.avatar; $('debug').checked = c.debug; $('demolink').checked = !!c.demolink; $('pre').value = c.pre || ''; $('hide').value = c.hide;
+      ['notw','plat','meuapp','lg_link'].forEach(k => $(k).checked = !!c[k]); ['kick','kickid','yt','ytkey','relay','clientid'].forEach(k => $(k).value = c[k] || '');
     } catch (e) {}
   }
 
@@ -217,7 +294,9 @@
   $('reset').addEventListener('click', () => { padrao(); salvar(); });
   // avatar do Teyo (mesma pasta de assets dos overlays), se existir
   try { const im = new Image(); const u = base().replace(/[^\/]*$/, '') + 'assets/teyo_avatar.png'; im.onload = () => { $('av').style.backgroundImage = 'url(' + u + ')'; }; im.src = u; } catch (e) {}
-  carregar(); atualizar();
+  $('lg_entrar').addEventListener('click', entrarTwitch);
+  $('lg_sair').addEventListener('click', sairTwitch);
+  carregar(); atualizar(); voltouDoLogin();
 })();
 </script>
 </body>

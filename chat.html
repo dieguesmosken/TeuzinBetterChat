@@ -2,11 +2,12 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<title>TeuzinBetterChat 1.0</title>
+<title>TeuzinBetterChat 2.0 beta</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  TeuzinBetterChat 1.0 - widget de chat leve para OBS (Fonte de navegador)
-  Conecta direto no chat da Twitch (leitura anonima, sem login, sem token).
+  TeuzinBetterChat 2.0 beta - widget de chat leve para OBS (Fonte de navegador)
+  Conecta direto no chat da Twitch (leitura anonima por padrao) e, opcionalmente,
+  junta Kick, YouTube e TikTok na mesma tela (multichat).
 
   Parametros na URL (todos opcionais):
     ?channel=teuzin0dev   canal
@@ -22,6 +23,15 @@
     &avatar=1             mostra a foto de perfil de quem fala
     &debug=1              mostra o nome tecnico de cada selo (para diagnostico)
     &demo=1               mensagens de teste (sem conectar)
+
+  Multichat e login (opcionais):
+    &channel=             (vazio) desliga a Twitch, util se so quiser outras plataformas
+    &login=SEU_LOGIN&token=TOKEN   entra na Twitch autenticado (o token vale como senha!)
+    &kick=canal&kickid=ID  chat da Kick (kickid = numero da sala; veja o configurador)
+    &yt=ID_DO_VIDEO&ytkey=CHAVE   chat do YouTube (chave da YouTube Data API v3)
+    &ytint=6              segundos entre consultas do YouTube (minimo 3)
+    &relay=ws://localhost:8787     recebe mensagens de um relay (ex.: TikTok, veja relay/)
+    &plat=1               mostra o selo da plataforma em cada mensagem (automatico com 2+ fontes)
 -->
 <style>
   :root{
@@ -49,6 +59,9 @@
   .quem::after{content:":";color:var(--lilas);font-weight:700;margin-left:1px}
   .badge{display:inline-block;font-size:.55em;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
     padding:.15em .5em;margin-right:.45em;border-radius:99px;vertical-align:.18em;color:#fff;background:var(--roxo)}
+  .plat{display:inline-block;font-size:.5em;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:.2em .55em;margin-right:.45em;border-radius:6px;vertical-align:.25em;color:#fff}
+  .plat.p-twitch{background:#9146ff}.plat.p-kick{background:#53fc18;color:#0b0b0b}.plat.p-youtube{background:#ff0033}.plat.p-tiktok{background:#111;box-shadow:inset 2px 0 #25f4ee,inset -2px 0 #fe2c55}
+  .msg.p-kick{--plat:#53fc18}.msg.p-youtube{--plat:#ff0033}.msg.p-tiktok{--plat:#fe2c55}
   .badge.b-broadcaster{background:#e0245e}
   .badge.b-moderator{background:#1fae5b}
   .badge.b-vip{background:#d63cb7}
@@ -82,6 +95,17 @@
   const EXT   = P.get('ext') !== '0';
   const DEBUG = P.get('debug') === '1';
   const AVATAR = P.get('avatar') === '1';
+  const TW_ON = !(P.has('channel') && P.get('channel') === '');
+  const TW_LOGIN = (P.get('login') || '').toLowerCase().replace(/^#/, '');
+  const TW_TOKEN = (P.get('token') || '').replace(/^oauth:/, '');
+  const KICK = (P.get('kick') || '').toLowerCase().trim();
+  const KICKID = (P.get('kickid') || '').trim();
+  const YT = (P.get('yt') || '').trim();
+  const YTKEY = (P.get('ytkey') || '').trim();
+  const YTINT = Math.max(3, parseFloat(P.get('ytint') || '6'));
+  const RELAY = (P.get('relay') || '').trim();
+  const FONTES = (TW_ON ? 1 : 0) + (KICK || KICKID ? 1 : 0) + (YT && YTKEY ? 1 : 0) + (RELAY ? 1 : 0);
+  const SHOWPLAT = P.get('plat') === '1' || FONTES > 1;
   const OCULTOS = new Set((P.has('hide') ? P.get('hide') :
     'nightbot,streamelements,streamlabs,moobot,fossabot,wizebot,sery_bot,soundalerts,commanderroot')
     .toLowerCase().split(',').map(s => s.trim()).filter(Boolean));
@@ -238,6 +262,17 @@
     flush();
   }
 
+  // texto ja dividido em pedacos: [{v:'oi '}, {e:'https://...png', a:'KEKW'}]
+  function construirPartes(el, partes) {
+    partes.forEach(p => {
+      if (p.e) {
+        const img = document.createElement('img');
+        img.className = 'emote'; img.alt = p.a || ''; img.src = p.e; img.referrerPolicy = 'no-referrer';
+        el.appendChild(img);
+      } else if (p.v) el.appendChild(document.createTextNode(p.v));
+    });
+  }
+
   const BADGES = {
     broadcaster:['b-broadcaster','Dono'], moderator:['b-moderator','Mod'],
     vip:['b-vip','VIP'], subscriber:['b-subscriber','Sub'], founder:['b-founder','Fundador'],
@@ -246,12 +281,17 @@
   };
 
   // ---------- render ----------
-  function mostrar({ id, nome, login, cor, texto, emotes, badges, acao, primeira, destaque }) {
+  function mostrar({ id, nome, login, cor, texto, emotes, badges, acao, primeira, destaque, plat = 'twitch', avatarUrl, partes }) {
     const m = document.createElement('div');
-    m.className = 'msg' + (acao ? ' acao' : '') + (primeira ? ' primeira' : '') + (destaque ? ' destaque' : '');
+    m.className = 'msg p-' + plat + (acao ? ' acao' : '') + (primeira ? ' primeira' : '') + (destaque ? ' destaque' : '');
     m.dataset.id = id || '';
     m.dataset.login = login || '';
     m.style.setProperty('--cor', cor);
+    if (SHOWPLAT) {
+      const pl = document.createElement('span');
+      pl.className = 'plat p-' + plat; pl.textContent = ({ twitch: 'Twitch', kick: 'Kick', youtube: 'YouTube', tiktok: 'TikTok' })[plat] || plat;
+      m.appendChild(pl);
+    }
 
     if (AVATAR) {
       const a = document.createElement('span');
@@ -265,11 +305,12 @@
         im.onerror = () => { if (url.includes('unavatar')) pegarAvatar(login).then(u => { if (u) poe(u); }); };
         im.src = url;
       };
-      poe(`https://unavatar.io/twitch/${encodeURIComponent(login)}`);
+      if (avatarUrl) poe(avatarUrl);
+      else if (plat === 'twitch') poe(`https://unavatar.io/twitch/${encodeURIComponent(login)}`);
     }
     (badges || '').split(',').filter(Boolean).forEach(b => {
       const [nomeB, ver] = b.split('/');
-      const url = achaSelo(nomeB, ver);
+      const url = plat === 'twitch' ? achaSelo(nomeB, ver) : null;
       if (DEBUG) {
         const d = document.createElement('span');
         d.className = 'badge'; d.style.background = '#444'; d.textContent = nomeB + '/' + ver + (url ? ' ✓' : ' ✗');
@@ -293,7 +334,7 @@
 
     const t = document.createElement('span');
     t.className = 'texto';
-    construirTexto(t, texto, emotes);
+    if (partes) construirPartes(t, partes); else if (plat === 'twitch') construirTexto(t, texto, emotes); else t.appendChild(document.createTextNode(texto));
     m.appendChild(t);
 
     chat.appendChild(m);
@@ -361,8 +402,11 @@
     const ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
     ws.onopen = () => {
       ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
-      ws.send('PASS SCHMOOCHIES');                         // login anonimo (somente leitura)
-      ws.send('NICK justinfan' + (10000 + Math.floor(Math.random() * 89999)));
+      if (TW_TOKEN && TW_LOGIN) { ws.send('PASS oauth:' + TW_TOKEN); ws.send('NICK ' + TW_LOGIN); }   // autenticado
+      else {
+        ws.send('PASS SCHMOOCHIES');                       // login anonimo (somente leitura)
+        ws.send('NICK justinfan' + (10000 + Math.floor(Math.random() * 89999)));
+      }
       ws.send('JOIN #' + CANAL);
     };
     ws.onmessage = ev => {
@@ -376,6 +420,123 @@
     ws.onerror = () => ws.close();
   }
 
+  // ---------- filtros comuns (plataformas alem da Twitch) ----------
+  function passa(login, texto) {
+    if (OCULTOS.has((login || '').toLowerCase())) return false;
+    if (!CMDS && texto.startsWith('!')) return false;
+    if (PREFIXOS.length && PREFIXOS.some(p => texto.toLowerCase().startsWith(p))) return false;
+    return true;
+  }
+  function reconectador(fn, rotulo) {
+    let atrasoX = 1000;
+    const rodar = () => fn(() => { atrasoX = 1000; }, () => { setStatus(rotulo + ': reconectando…'); setTimeout(rodar, atrasoX); atrasoX = Math.min(atrasoX * 2, 15000); });
+    rodar();
+  }
+
+  // ---------- Kick (WebSocket publico da sala, via Pusher) ----------
+  async function acharSalaKick() {
+    if (KICKID) return KICKID;
+    try {
+      const r = await fetch('https://kick.com/api/v2/channels/' + encodeURIComponent(KICK));
+      const j = await r.json();
+      return String(j.chatroom && j.chatroom.id || '');
+    } catch (e) { return ''; }
+  }
+  async function iniciarKick() {
+    const sala = await acharSalaKick();
+    if (!sala) { setStatus('Kick: não achei o número da sala (use &kickid=)'); return; }
+    reconectador((ok, cair) => {
+      const ws = new WebSocket('wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0-rc2&flash=false');
+      ws.onmessage = ev => {
+        let d; try { d = JSON.parse(ev.data); } catch (e) { return; }
+        if (d.event === 'pusher:connection_established') ws.send(JSON.stringify({ event: 'pusher:subscribe', data: { auth: '', channel: 'chatrooms.' + sala + '.v2' } }));
+        else if (d.event === 'pusher:subscription_succeeded') { ok(); setStatus('Kick conectado ✓'); setTimeout(() => setStatus(''), 2500); }
+        else if (d.event === 'pusher:ping') ws.send(JSON.stringify({ event: 'pusher:pong', data: {} }));
+        else if (d.event === 'App\\Events\\ChatMessageEvent') { try { tratarKick(JSON.parse(d.data)); } catch (e) {} }
+        else if (d.event === 'App\\Events\\MessageDeletedEvent') {
+          try { const id = String(JSON.parse(d.data).message.id); chat.querySelectorAll('.msg').forEach(e => { if (e.dataset.id === id) e.remove(); }); } catch (e) {}
+        }
+      };
+      ws.onclose = cair; ws.onerror = () => ws.close();
+    }, 'Kick');
+  }
+  function tratarKick(m) {
+    const login = (m.sender && (m.sender.slug || m.sender.username) || '').toLowerCase();
+    const nome = m.sender && m.sender.username || login;
+    const texto = String(m.content || '');
+    if (!passa(login, texto)) return;
+    const idn = m.sender && m.sender.identity || {};
+    const partes = []; const re = /\[emote:(\d+):([^\]]+)\]/g; let ult = 0, mm;
+    while ((mm = re.exec(texto))) {
+      if (mm.index > ult) partes.push({ v: texto.slice(ult, mm.index) });
+      partes.push({ e: 'https://files.kick.com/emotes/' + mm[1] + '/fullsize', a: mm[2] });
+      ult = re.lastIndex;
+    }
+    if (ult < texto.length) partes.push({ v: texto.slice(ult) });
+    const tipos = (idn.badges || []).map(b => b.type).filter(t => BADGES[t]).map(t => t + '/1').join(',');
+    espera.then(() => mostrar({ plat: 'kick', id: String(m.id || ''), login, nome, cor: corLegivel(idn.color, login),
+      texto, partes, badges: tipos }));
+  }
+
+  // ---------- YouTube (YouTube Data API v3, consulta de tempos em tempos) ----------
+  async function iniciarYouTube() {
+    try {
+      const r = await fetch('https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=' + encodeURIComponent(YT) + '&key=' + encodeURIComponent(YTKEY));
+      const j = await r.json();
+      if (j.error) throw new Error(j.error.message || 'erro');
+      const chatId = j.items && j.items[0] && j.items[0].liveStreamingDetails && j.items[0].liveStreamingDetails.activeLiveChatId;
+      if (!chatId) { setStatus('YouTube: esse vídeo não tem chat ao vivo'); return; }
+      setStatus('YouTube conectado ✓'); setTimeout(() => setStatus(''), 2500);
+      let token = '', primeira = true;
+      const ciclo = async () => {
+        let espera_ms = YTINT * 1000;
+        try {
+          const u = 'https://www.googleapis.com/youtube/v3/liveChat/messages?part=snippet,authorDetails&maxResults=200&liveChatId=' + encodeURIComponent(chatId) + (token ? '&pageToken=' + encodeURIComponent(token) : '') + '&key=' + encodeURIComponent(YTKEY);
+          const d = await (await fetch(u)).json();
+          if (d.error) throw new Error(d.error.message || 'erro');
+          token = d.nextPageToken || token;
+          espera_ms = Math.max(espera_ms, d.pollingIntervalMillis || 0);
+          let itens = d.items || [];
+          if (primeira) { itens = itens.slice(-5); primeira = false; }   // nao despeja o historico inteiro
+          itens.forEach(tratarYouTube);
+        } catch (e) { setStatus('YouTube: ' + (e.message || 'erro').slice(0, 60)); espera_ms = Math.max(espera_ms, 15000); }
+        setTimeout(ciclo, espera_ms);
+      };
+      ciclo();
+    } catch (e) { setStatus('YouTube: ' + (e.message || 'erro').slice(0, 60)); }
+  }
+  function tratarYouTube(it) {
+    const a = it.authorDetails || {}, sn = it.snippet || {};
+    const login = (a.channelId || a.displayName || '').toLowerCase();
+    let texto = sn.displayMessage || (sn.textMessageDetails && sn.textMessageDetails.messageText) || '';
+    let destaque = false;
+    if (sn.type === 'superChatEvent' && sn.superChatDetails) { texto = '💰 ' + sn.superChatDetails.amountDisplayString + (sn.superChatDetails.userComment ? ' — ' + sn.superChatDetails.userComment : ''); destaque = true; }
+    else if (sn.type === 'newSponsorEvent') { texto = '⭐ novo membro!'; destaque = true; }
+    else if (sn.type !== 'textMessageEvent') { if (!texto) return; destaque = true; }
+    if (!texto || !passa(a.displayName, texto)) return;
+    const tipos = [a.isChatOwner ? 'broadcaster/1' : '', a.isChatModerator ? 'moderator/1' : '', a.isChatSponsor ? 'subscriber/1' : ''].filter(Boolean).join(',');
+    espera.then(() => mostrar({ plat: 'youtube', id: it.id, login, nome: a.displayName || 'YouTube', cor: corLegivel('', a.displayName || 'yt'),
+      texto, badges: tipos, destaque, avatarUrl: a.profileImageUrl }));
+  }
+
+  // ---------- Relay (TikTok e outras fontes que precisam de servidor) ----------
+  function iniciarRelay() {
+    reconectador((ok, cair) => {
+      const ws = new WebSocket(RELAY);
+      ws.onopen = () => { ok(); setStatus('relay conectado ✓'); setTimeout(() => setStatus(''), 2500); };
+      ws.onmessage = ev => {
+        let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+        if (m.apagar) { chat.querySelectorAll('.msg').forEach(e => { if (e.dataset.id === String(m.apagar)) e.remove(); }); return; }
+        const texto = String(m.texto || ''), login = String(m.login || m.nome || '').toLowerCase();
+        if (!texto || !passa(login, texto)) return;
+        const plat = ['twitch', 'kick', 'youtube', 'tiktok'].includes(m.plat) ? m.plat : 'tiktok';
+        espera.then(() => mostrar({ plat, id: String(m.id || ''), login, nome: String(m.nome || login), cor: corLegivel(m.cor || '', login),
+          texto, badges: String(m.badges || ''), destaque: !!m.destaque, avatarUrl: m.avatar, partes: Array.isArray(m.partes) ? m.partes : undefined }));
+      };
+      ws.onclose = cair; ws.onerror = () => ws.close();
+    }, 'relay');
+  }
+
   // ---------- demo ----------
   function demo() {
     const fala = [
@@ -384,9 +545,10 @@
       ['Visitante','#FF4500','primeira vez aqui, amei o chat','']
     ];
     let n = 0;
+    const plats = SHOWPLAT ? ['twitch', 'kick', 'youtube', 'tiktok'] : ['twitch'];
     const tick = () => {
       const f = fala[n % fala.length]; n++;
-      mostrar({ id: 'd'+n, login: f[0].toLowerCase(), nome: f[0], cor: corLegivel(f[1], f[0]), texto: f[2],
+      mostrar({ plat: plats[n % plats.length], id: 'd'+n, login: f[0].toLowerCase(), nome: f[0], cor: corLegivel(f[1], f[0]), texto: f[2],
         emotes: '', badges: n % 4 === 0 ? 'moderator/1' : (n % 3 === 0 ? 'subscriber/1' : (n === 1 ? 'broadcaster/1' : '')),
         acao: n === 6, primeira: n === 5, destaque: n === 7 });
     };
@@ -395,7 +557,14 @@
   }
 
   espera = limite(carregarGlobais().then(infoDebug));
-  DEMO ? demo() : conectar();
+  if (DEMO) demo();
+  else {
+    if (TW_ON) conectar();
+    if (KICK || KICKID) iniciarKick();
+    if (YT && YTKEY) iniciarYouTube();
+    if (RELAY) iniciarRelay();
+    if (!FONTES) setStatus('nenhuma fonte de chat configurada');
+  }
 })();
 </script>
 </body>
