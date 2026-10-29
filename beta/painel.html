@@ -55,6 +55,8 @@
       <h2>Chat da sala</h2>
       <label for="sala">Número da sala <small>(o mesmo <code>kickid</code> do configurador)</small></label>
       <input type="text" id="sala" placeholder="ex.: 12345678" autocomplete="off" spellcheck="false">
+      <label for="relay">Relay local <small>(o Kick só deixa programas, não navegadores, lerem o chat: rode <code>node relay.js --kick SEUCANAL</code>)</small></label>
+      <input type="text" id="relay" placeholder="ws://localhost:8787" autocomplete="off" spellcheck="false">
       <div class="linha"><button class="sec" id="ouvir">Ouvir a sala</button></div>
     </section>
   </aside>
@@ -83,11 +85,11 @@
   const gravar = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   // Client ID publico do app da Kick do projeto (nao e segredo). O segredo fica so no worker.
   const CID_PADRAO = '01M64V54DJYW4HJP3VQ9CAFBYG';
-  const cfg = Object.assign({ worker: '', cid: CID_PADRAO, sala: '' }, ler(KS) || {});
+  const cfg = Object.assign({ worker: '', cid: CID_PADRAO, sala: '', relay: 'ws://localhost:8787' }, ler(KS) || {});
   if (!cfg.cid) cfg.cid = CID_PADRAO;
-  $('worker').value = cfg.worker; $('cid').value = cfg.cid; $('sala').value = cfg.sala;
-  const salvarCfg = () => { cfg.worker = $('worker').value.trim().replace(/\/+$/, ''); cfg.cid = $('cid').value.trim(); cfg.sala = $('sala').value.trim(); gravar(KS, cfg); };
-  ['worker', 'cid', 'sala'].forEach(i => $(i).addEventListener('input', salvarCfg));
+  $('worker').value = cfg.worker; $('cid').value = cfg.cid; $('sala').value = cfg.sala; $('relay').value = cfg.relay;
+  const salvarCfg = () => { cfg.worker = $('worker').value.trim().replace(/\/+$/, ''); cfg.cid = $('cid').value.trim(); cfg.sala = $('sala').value.trim(); cfg.relay = $('relay').value.trim(); gravar(KS, cfg); };
+  ['worker', 'cid', 'sala', 'relay'].forEach(i => $(i).addEventListener('input', salvarCfg));
 
   const estado = (t, cl) => { $('estado').textContent = t; $('estado').className = 'dica ' + (cl || ''); $('estado').id = 'estado'; };
 
@@ -178,7 +180,7 @@
     } catch (e) { alert('Não deu: ' + (e.message || e)); }
   }
   function linhaMsg(m) {
-    const d = document.createElement('div'); d.className = 'm'; d.style.setProperty('--cor', m.cor || '#A970FF');
+    const d = document.createElement('div'); d.className = 'm'; d.dataset.mid = String(m.id || ''); d.style.setProperty('--cor', m.cor || '#A970FF');
     const t = document.createElement('div'); t.className = 't';
     const b = document.createElement('b'); b.textContent = m.nome; t.append(b, document.createTextNode(': ' + m.texto));
     const a = document.createElement('div'); a.className = 'acoes';
@@ -192,24 +194,19 @@
   // ---- ouvir a sala (WebSocket publico, o mesmo do chat) ----
   let ws, ouvindo = false;
   function ouvir() {
-    salvarCfg(); if (!cfg.sala) { $('aviso').textContent = 'Informe o número da sala.'; return; }
+    salvarCfg(); if (!cfg.relay) { $('aviso').textContent = 'Informe o endereço do relay (ws://localhost:8787).'; return; }
     if (ws) { try { ws.onclose = null; ws.close(); } catch (e) {} }
-    ws = new WebSocket('wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0&flash=false');
+    try { ws = new WebSocket(cfg.relay); } catch (e) { $('aviso').textContent = 'Endereço do relay inválido.'; return; }
+    ws.onopen = () => { $('aviso').textContent = 'Relay conectado ✓ — aguardando mensagens do Kick'; };
     ws.onmessage = ev => {
-      let d; try { d = JSON.parse(ev.data); } catch (e) { return; }
-      if (d.event === 'pusher:connection_established') ws.send(JSON.stringify({ event: 'pusher:subscribe', data: { auth: '', channel: 'chatrooms.' + cfg.sala + '.v2' } }));
-      else if ((d.event === 'pusher_internal:subscription_succeeded' || d.event === 'pusher:subscription_succeeded')) $('aviso').textContent = 'Ouvindo a sala ' + cfg.sala + ' ✓';
-      else if (d.event === 'pusher:error') $('aviso').textContent = 'Erro da Kick: ' + String(d.data).slice(0, 120);
-      else if (d.event === 'pusher:ping') ws.send(JSON.stringify({ event: 'pusher:pong', data: {} }));
-      else if (d.event === 'App\\Events\\ChatMessageEvent') {
-        try {
-          const x = JSON.parse(d.data); const s = x.sender || {};
-          const l = $('lista'); l.appendChild(linhaMsg({ id: x.id, uid: s.id, nome: s.username || '?', cor: (s.identity || {}).color, texto: String(x.content || '').replace(/\[emote:\d+:([^\]]+)\]/g, '$1') }));
-          while (l.children.length > 120) l.firstChild.remove(); l.scrollTop = l.scrollHeight;
-        } catch (e) {}
-      }
+      let x; try { x = JSON.parse(ev.data); } catch (e) { return; }
+      const l = $('lista');
+      if (x.apagar) { l.querySelectorAll('[data-mid]').forEach(e => { if (e.dataset.mid === String(x.apagar)) e.remove(); }); return; }
+      if (x.plat !== 'kick') return;
+      l.appendChild(linhaMsg({ id: x.id, uid: x.uid, nome: x.nome || '?', cor: x.cor, texto: (x.partes || []).map(p => p.v || p.a || '').join('') || String(x.texto || '') }));
+      while (l.children.length > 120) l.firstChild.remove(); l.scrollTop = l.scrollHeight;
     };
-    ws.onclose = ev => { $('aviso').textContent = 'Reconectando… (código ' + (ev && ev.code) + (ev && ev.reason ? ': ' + ev.reason : '') + ')'; setTimeout(ouvir, 3000); };
+    ws.onclose = () => { $('aviso').textContent = 'Relay desligado ou não encontrado. Rode "node relay.js --kick SEUCANAL" no seu computador. Tentando de novo…'; setTimeout(ouvir, 4000); };
     ws.onerror = () => ws.close();
   }
 
