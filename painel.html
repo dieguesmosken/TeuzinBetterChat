@@ -194,11 +194,12 @@
   function ouvir() {
     salvarCfg(); if (!cfg.sala) { $('aviso').textContent = 'Informe o número da sala.'; return; }
     if (ws) { try { ws.onclose = null; ws.close(); } catch (e) {} }
-    ws = new WebSocket('wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0-rc2&flash=false');
+    ws = new WebSocket('wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0&flash=false');
     ws.onmessage = ev => {
       let d; try { d = JSON.parse(ev.data); } catch (e) { return; }
       if (d.event === 'pusher:connection_established') ws.send(JSON.stringify({ event: 'pusher:subscribe', data: { auth: '', channel: 'chatrooms.' + cfg.sala + '.v2' } }));
-      else if (d.event === 'pusher:subscription_succeeded') $('aviso').textContent = 'Ouvindo a sala ' + cfg.sala + ' ✓';
+      else if ((d.event === 'pusher_internal:subscription_succeeded' || d.event === 'pusher:subscription_succeeded')) $('aviso').textContent = 'Ouvindo a sala ' + cfg.sala + ' ✓';
+      else if (d.event === 'pusher:error') $('aviso').textContent = 'Erro da Kick: ' + String(d.data).slice(0, 120);
       else if (d.event === 'pusher:ping') ws.send(JSON.stringify({ event: 'pusher:pong', data: {} }));
       else if (d.event === 'App\\Events\\ChatMessageEvent') {
         try {
@@ -208,7 +209,7 @@
         } catch (e) {}
       }
     };
-    ws.onclose = () => { $('aviso').textContent = 'Reconectando…'; setTimeout(ouvir, 3000); };
+    ws.onclose = ev => { $('aviso').textContent = 'Reconectando… (código ' + (ev && ev.code) + (ev && ev.reason ? ': ' + ev.reason : '') + ')'; setTimeout(ouvir, 3000); };
     ws.onerror = () => ws.close();
   }
 
