@@ -177,6 +177,17 @@
       else if (tipo === 'timeout') await api('POST', 'moderation/bans', { broadcaster_user_id: Number(eu.id), user_id: Number(m.uid), duration: 10, reason: 'timeout pelo painel' });
       else if (tipo === 'banir') { if (!confirm('Banir ' + m.nome + '?')) return; await api('POST', 'moderation/bans', { broadcaster_user_id: Number(eu.id), user_id: Number(m.uid), reason: 'banido pelo painel' }); }
       linha.classList.add('apagada');
+      if (tipo !== 'apagar') {
+        const ac = linha.querySelector('.acoes'); if (ac) {
+          ac.textContent = '';
+          const bt = document.createElement('button'); bt.className = 'mini sec'; bt.textContent = tipo === 'banir' ? 'Desbanir' : 'Tirar timeout';
+          bt.addEventListener('click', async () => {
+            try { await api('DELETE', 'moderation/bans', { broadcaster_user_id: Number(eu.id), user_id: Number(m.uid) }); linha.classList.remove('apagada'); bt.remove(); }
+            catch (e) { alert('Não deu: ' + (e.message || e)); }
+          });
+          ac.appendChild(bt);
+        }
+      }
     } catch (e) { alert('Não deu: ' + (e.message || e)); }
   }
   function linhaMsg(m) {
