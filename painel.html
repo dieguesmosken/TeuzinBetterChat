@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<title>TeuzinBetterChat - Painel (Kick)</title>
+<title>TeuzinBetterChat - Painel</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root{--roxo:#7B2CF2;--lilas:#A970FF;--noite:#0e0820;--painel:#11111a;--texto:#f4eeff;--suave:#b9a8e0}
@@ -33,7 +33,10 @@
   .m b{color:var(--cor,#fff)}
   .m .acoes{display:flex;gap:4px;flex-shrink:0}
   .m.apagada{opacity:.4;text-decoration:line-through}
-  #aviso{color:#ffd37d;font-size:12.5px}
+  #aviso,#avisoyt{color:#ffd37d;font-size:12.5px}
+  .tag{font-size:10px;font-weight:800;letter-spacing:.06em;border-radius:6px;padding:1px 6px;margin-right:6px;vertical-align:1px;color:#fff}
+  .tag.kick{background:#1a7f37} .tag.youtube{background:#c4302b}
+  .checks{display:flex;gap:16px;margin:4px 0 8px;font-size:13px} .checks label{display:flex;gap:6px;align-items:center;margin:0;font-weight:600}
 </style>
 </head>
 <body>
@@ -41,7 +44,7 @@
   <aside>
     <section class="moldura">
       <h1><span>Teuzin</span>BetterChat</h1>
-      <p class="dica">Painel do dono do canal: enviar mensagens e moderar na Kick.</p>
+      <p class="dica">Painel do dono do canal: enviar mensagens e moderar na Kick e no YouTube.</p>
       <h2>Conexão</h2>
       <label for="worker">Endereço do worker <small>(o servidor que guarda o segredo do app)</small></label>
       <input type="text" id="worker" placeholder="https://teuzinbetterchat-kick.SEU.workers.dev" autocomplete="off" spellcheck="false">
@@ -59,16 +62,29 @@
       <input type="text" id="relay" placeholder="wss://teuzinbetterchat-relay.onrender.com" autocomplete="off" spellcheck="false">
       <div class="linha"><button class="sec" id="ouvir">Ouvir a sala</button></div>
     </section>
+    <section class="moldura">
+      <h2>YouTube</h2>
+      <label for="ytcid">Client ID do app do Google <small>(público)</small></label>
+      <input type="text" id="ytcid" placeholder="algo.apps.googleusercontent.com" autocomplete="off" spellcheck="false">
+      <p class="dica">URL de redirecionamento: <b id="redir2"></b></p>
+      <div class="linha"><button id="yentrar">Entrar com o Google</button><button class="sec" id="ysair" hidden>Sair</button></div>
+      <p id="yestado" class="dica">Sem login.</p>
+      <label for="ytint">Consultar o chat a cada <small>(segundos; cada consulta gasta 5 da cota diária de 10.000)</small></label>
+      <input type="text" id="ytint" placeholder="10" autocomplete="off" spellcheck="false">
+      <div class="linha"><button class="sec" id="youvir" disabled>Ouvir o YouTube</button></div>
+      <p id="avisoyt"></p>
+    </section>
   </aside>
   <main>
     <section class="moldura">
       <h2>Enviar mensagem como você</h2>
-      <textarea id="txt" maxlength="500" placeholder="escreva e envie para o chat da Kick" disabled></textarea>
+      <div class="checks"><label><input type="checkbox" id="dkick" checked> Kick</label><label><input type="checkbox" id="dyt" checked> YouTube</label></div>
+      <textarea id="txt" maxlength="200" placeholder="escreva e envie para o chat" disabled></textarea>
       <div class="linha"><button id="enviar" disabled>Enviar</button><span id="envio" class="dica"></span></div>
     </section>
     <section class="moldura">
       <h2>Mensagens e moderação</h2>
-      <p id="aviso">Entre com a Kick e ouça a sala para ver as mensagens com os botões de apagar, timeout e banir.</p>
+      <p id="aviso">Entre e ouça as salas para ver as mensagens com os botões de apagar, timeout e banir.</p>
       <div id="lista"></div>
     </section>
   </main>
@@ -85,11 +101,11 @@
   const gravar = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   // Client ID publico do app da Kick do projeto (nao e segredo). O segredo fica so no worker.
   const CID_PADRAO = '01M64V54DJYW4HJP3VQ9CAFBYG';
-  const cfg = Object.assign({ worker: '', cid: CID_PADRAO, sala: '', relay: 'wss://teuzinbetterchat-relay.onrender.com' }, ler(KS) || {});
+  const cfg = Object.assign({ worker: '', cid: CID_PADRAO, sala: '', relay: 'wss://teuzinbetterchat-relay.onrender.com', ytcid: '', ytint: '10' }, ler(KS) || {});
   if (!cfg.cid) cfg.cid = CID_PADRAO;
-  $('worker').value = cfg.worker; $('cid').value = cfg.cid; $('sala').value = cfg.sala; $('relay').value = cfg.relay;
-  const salvarCfg = () => { cfg.worker = $('worker').value.trim().replace(/\/+$/, ''); cfg.cid = $('cid').value.trim(); cfg.sala = $('sala').value.trim(); cfg.relay = $('relay').value.trim(); gravar(KS, cfg); };
-  ['worker', 'cid', 'sala', 'relay'].forEach(i => $(i).addEventListener('input', salvarCfg));
+  $('worker').value = cfg.worker; $('cid').value = cfg.cid; $('sala').value = cfg.sala; $('relay').value = cfg.relay; $('ytcid').value = cfg.ytcid; $('ytint').value = cfg.ytint; $('redir2').textContent = redir;
+  const salvarCfg = () => { cfg.worker = $('worker').value.trim().replace(/\/+$/, ''); cfg.cid = $('cid').value.trim(); cfg.sala = $('sala').value.trim(); cfg.relay = $('relay').value.trim(); cfg.ytcid = $('ytcid').value.trim(); cfg.ytint = $('ytint').value.trim(); gravar(KS, cfg); };
+  ['worker', 'cid', 'sala', 'relay', 'ytcid', 'ytint'].forEach(i => $(i).addEventListener('input', salvarCfg));
 
   const estado = (t, cl) => { $('estado').textContent = t; $('estado').className = 'dica ' + (cl || ''); $('estado').id = 'estado'; };
 
@@ -107,6 +123,7 @@
   }
   async function voltou() {
     const q = new URLSearchParams(location.search); const code = q.get('code'); if (!code) return;
+    if ((q.get('state') || '').startsWith('yt.')) return ytVoltou(q, code);
     history.replaceState(null, '', location.pathname);
     let g = null; try { g = JSON.parse(sessionStorage.getItem('kick-pkce') || 'null'); sessionStorage.removeItem('kick-pkce'); } catch (e) {}
     if (!g || g.state !== q.get('state')) { estado('Login recusado: o "state" não confere. Tente de novo.', 'erro'); return; }
@@ -148,7 +165,7 @@
   function atualizar() {
     const logado = !!ler(KT);
     $('entrar').hidden = logado; $('sair').hidden = !logado;
-    $('txt').disabled = $('enviar').disabled = !logado || !eu;
+    $('txt').disabled = $('enviar').disabled = !((logado && eu) || (!!ler(KYT)));
     if (!logado) estado('Sem login.');
   }
   async function sair() {
@@ -159,18 +176,31 @@
 
   // ---- enviar ----
   async function enviar() {
-    const c = $('txt').value.trim(); if (!c || !eu) return;
+    const c = $('txt').value.trim(); if (!c) return;
+    const alvos = [];
+    if ($('dkick').checked && eu && ler(KT)) alvos.push('Kick');
+    if ($('dyt').checked && yt.chatId && ler(KYT)) alvos.push('YouTube');
+    if (!alvos.length) { $('envio').textContent = 'nenhum destino pronto (entre e ouça a sala/live)'; return; }
     $('enviar').disabled = true; $('envio').textContent = 'enviando…';
-    try {
-      const j = await api('POST', 'chat', { broadcaster_user_id: Number(eu.id), content: c, type: 'user' });
-      if (j.data && j.data.is_sent === false) throw new Error('a Kick não enviou');
-      $('txt').value = ''; $('envio').textContent = 'enviado ✓';
-    } catch (e) { $('envio').textContent = 'erro: ' + (e.message || e); }
-    $('enviar').disabled = false; setTimeout(() => { $('envio').textContent = ''; }, 3000);
+    const erros = [];
+    if (alvos.includes('Kick')) {
+      try {
+        const j = await api('POST', 'chat', { broadcaster_user_id: Number(eu.id), content: c, type: 'user' });
+        if (j.data && j.data.is_sent === false) throw new Error('a Kick não enviou');
+      } catch (e) { erros.push('Kick: ' + (e.message || e)); }
+    }
+    if (alvos.includes('YouTube')) {
+      try { await yapi('POST', 'liveChat/messages?part=snippet', { snippet: { liveChatId: yt.chatId, type: 'textMessageEvent', textMessageDetails: { messageText: c.slice(0, 200) } } }); }
+      catch (e) { erros.push('YouTube: ' + (e.message || e)); }
+    }
+    if (erros.length) $('envio').textContent = 'erro: ' + erros.join(' | ');
+    else { $('txt').value = ''; $('envio').textContent = 'enviado ✓'; }
+    $('enviar').disabled = false; setTimeout(() => { $('envio').textContent = ''; }, 4000);
   }
 
   // ---- moderacao ----
   async function moderar(tipo, m, linha) {
+    if (m.plat === 'youtube') return moderarYT(tipo, m, linha);
     if (!eu) return;
     try {
       if (tipo === 'apagar') await api('DELETE', 'chat/' + encodeURIComponent(m.id));
@@ -193,11 +223,12 @@
   function linhaMsg(m) {
     const d = document.createElement('div'); d.className = 'm'; d.dataset.mid = String(m.id || ''); d.style.setProperty('--cor', m.cor || '#A970FF');
     const t = document.createElement('div'); t.className = 't';
-    const b = document.createElement('b'); b.textContent = m.nome; t.append(b, document.createTextNode(': ' + m.texto));
+    const tg = document.createElement('span'); tg.className = 'tag ' + (m.plat || 'kick'); tg.textContent = m.plat === 'youtube' ? 'YT' : 'KICK';
+    const b = document.createElement('b'); b.textContent = m.nome; t.append(tg, b, document.createTextNode(': ' + m.texto));
     const a = document.createElement('div'); a.className = 'acoes';
     [['apagar', 'Apagar', ''], ['timeout', '10 min', ''], ['banir', 'Banir', 'perigo']].forEach(([k, rot, cl]) => {
       const bt = document.createElement('button'); bt.className = 'mini sec ' + cl; bt.textContent = rot;
-      bt.disabled = !eu; bt.addEventListener('click', () => moderar(k, m, d)); a.appendChild(bt);
+      bt.disabled = m.plat === 'youtube' ? !ler(KYT) : !eu; bt.addEventListener('click', () => moderar(k, m, d)); a.appendChild(bt);
     });
     d.append(t, a); return d;
   }
@@ -214,18 +245,144 @@
       const l = $('lista');
       if (x.apagar) { l.querySelectorAll('[data-mid]').forEach(e => { if (e.dataset.mid === String(x.apagar)) e.remove(); }); return; }
       if (x.plat !== 'kick') return;
-      l.appendChild(linhaMsg({ id: x.id, uid: x.uid, nome: x.nome || '?', cor: x.cor, texto: (x.partes || []).map(p => p.v || p.a || '').join('') || String(x.texto || '') }));
+      l.appendChild(linhaMsg({ plat: 'kick', id: x.id, uid: x.uid, nome: x.nome || '?', cor: x.cor, texto: (x.partes || []).map(p => p.v || p.a || '').join('') || String(x.texto || '') }));
       while (l.children.length > 120) l.firstChild.remove(); l.scrollTop = l.scrollHeight;
     };
     ws.onclose = () => { $('aviso').textContent = 'Relay desligado ou não encontrado. Rode "node relay.js --kick SEUCANAL" no seu computador. Tentando de novo…'; setTimeout(ouvir, 4000); };
     ws.onerror = () => ws.close();
   }
 
+
+  // =====================  YOUTUBE  =====================
+  const KYT = 'teyo-painel-yt-token';
+  const YT_ESCOPO = 'https://www.googleapis.com/auth/youtube.force-ssl';
+  const YT = 'https://www.googleapis.com/youtube/v3/';
+  const yt = { chatId: '', canal: '', token: '', pagina: '', primeira: true, timer: 0, ouvindo: false };
+  const yestado = (t, cl) => { const e = $('yestado'); e.textContent = t; e.className = 'dica ' + (cl || ''); };
+  async function yentrar() {
+    salvarCfg();
+    if (!cfg.worker || !cfg.ytcid) { yestado('Preencha o endereço do worker e o Client ID do Google.', 'erro'); return; }
+    const verifier = aleatorio(48), state = 'yt.' + aleatorio(16);
+    const desafio = b64u(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
+    try { sessionStorage.setItem('yt-pkce', JSON.stringify({ verifier, state })); } catch (e) {}
+    location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({ response_type: 'code', client_id: cfg.ytcid, redirect_uri: redir,
+      scope: YT_ESCOPO, access_type: 'offline', prompt: 'consent', include_granted_scopes: 'true', code_challenge: desafio, code_challenge_method: 'S256', state });
+  }
+  async function ytVoltou(q, code) {
+    history.replaceState(null, '', location.pathname);
+    let g = null; try { g = JSON.parse(sessionStorage.getItem('yt-pkce') || 'null'); sessionStorage.removeItem('yt-pkce'); } catch (e) {}
+    if (q.get('error')) { yestado('O Google recusou: ' + q.get('error'), 'erro'); return; }
+    if (!g || g.state !== q.get('state')) { yestado('Login recusado: o "state" não confere. Tente de novo.', 'erro'); return; }
+    try {
+      const r = await fetch(cfg.worker + '/yt/token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, code_verifier: g.verifier, redirect_uri: redir }) });
+      const j = await r.json(); if (!r.ok || !j.access_token) throw new Error(j.error_description || j.erro || j.error || 'falha ' + r.status);
+      gravar(KYT, { at: j.access_token, rt: j.refresh_token, ate: Date.now() + (j.expires_in || 3600) * 1000 - 60000 });
+      yestado('Conectado ao Google ✓ — agora clique em "Ouvir o YouTube" com a live aberta.', 'ok');
+    } catch (e) { yestado('Não consegui entrar: ' + (e.message || e), 'erro'); }
+    yatualizar();
+  }
+  async function ytoken() {
+    const t = ler(KYT); if (!t) return null;
+    if (Date.now() < t.ate) return t.at;
+    try {
+      const r = await fetch(cfg.worker + '/yt/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: t.rt }) });
+      const j = await r.json(); if (!r.ok || !j.access_token) throw 0;
+      gravar(KYT, { at: j.access_token, rt: t.rt, ate: Date.now() + (j.expires_in || 3600) * 1000 - 60000 });
+      return j.access_token;
+    } catch (e) { gravar(KYT, null); yestado('A sessão do Google expirou. Entre de novo.', 'erro'); yparar(); yatualizar(); return null; }
+  }
+  async function yapi(metodo, caminho, corpo) {
+    const at = await ytoken(); if (!at) throw new Error('sem login do Google');
+    const r = await fetch(YT + caminho, { method: metodo, headers: { Authorization: 'Bearer ' + at, 'Content-Type': 'application/json' }, body: corpo ? JSON.stringify(corpo) : undefined });
+    const t = await r.text(); let j = {}; try { j = JSON.parse(t); } catch (e) {}
+    if (!r.ok) throw new Error(((j.error && (j.error.message || j.error.status)) || 'erro') + ' [' + metodo + ' ' + caminho.split('?')[0] + ' → HTTP ' + r.status + ']');
+    return j;
+  }
+  function yatualizar() {
+    const logado = !!ler(KYT);
+    $('yentrar').hidden = logado; $('ysair').hidden = !logado; $('youvir').disabled = !logado;
+    if (!logado) yestado('Sem login.');
+    atualizar();
+  }
+  async function ysair() {
+    yparar();
+    const t = ler(KYT);
+    if (t && cfg.worker) { try { await fetch(cfg.worker + '/yt/revoke', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: t.at }) }); } catch (e) {} }
+    gravar(KYT, null); yt.chatId = ''; yatualizar();
+  }
+  function yparar() { yt.ouvindo = false; clearTimeout(yt.timer); $('youvir').textContent = 'Ouvir o YouTube'; }
+  async function youvir() {
+    if (yt.ouvindo) { yparar(); $('avisoyt').textContent = 'Parado.'; return; }
+    salvarCfg();
+    $('avisoyt').textContent = 'Procurando a sua live ativa…';
+    try {
+      const j = await yapi('GET', 'liveBroadcasts?part=snippet,status&broadcastStatus=active&broadcastType=all&maxResults=1');
+      const b = j.items && j.items[0];
+      if (!b || !b.snippet || !b.snippet.liveChatId) { $('avisoyt').textContent = 'Nenhuma live ativa no seu canal. Inicie a live no YouTube e tente de novo.'; return; }
+      yt.chatId = b.snippet.liveChatId; yt.canal = b.snippet.channelId; yt.pagina = ''; yt.primeira = true; yt.ouvindo = true;
+      $('youvir').textContent = 'Parar o YouTube';
+      $('avisoyt').textContent = 'Ouvindo: ' + (b.snippet.title || 'sua live') + ' ✓';
+      atualizar(); yciclo();
+    } catch (e) { $('avisoyt').textContent = 'Erro: ' + (e.message || e); }
+  }
+  async function yciclo() {
+    if (!yt.ouvindo) return;
+    let espera = Math.max(5, parseInt(cfg.ytint, 10) || 10) * 1000;
+    try {
+      const j = await yapi('GET', 'liveChat/messages?part=snippet,authorDetails&maxResults=200&liveChatId=' + encodeURIComponent(yt.chatId) + (yt.pagina ? '&pageToken=' + encodeURIComponent(yt.pagina) : ''));
+      yt.pagina = j.nextPageToken || yt.pagina;
+      espera = Math.max(espera, j.pollingIntervalMillis || 0);
+      if (!yt.primeira) {
+        const l = $('lista');
+        (j.items || []).forEach(it => {
+          const s = it.snippet || {}, a = it.authorDetails || {};
+          if (!s.displayMessage) return;
+          l.appendChild(linhaMsg({ plat: 'youtube', id: it.id, uid: s.authorChannelId || a.channelId, nome: a.displayName || '?', cor: a.isChatOwner ? '#ffd24a' : (a.isChatModerator ? '#5e84f1' : '#ff6b6b'), texto: s.displayMessage }));
+        });
+        while (l.children.length > 120) l.firstChild.remove(); l.scrollTop = l.scrollHeight;
+      }
+      yt.primeira = false;
+    } catch (e) {
+      $('avisoyt').textContent = 'Erro ao ler o chat: ' + (e.message || e);
+      if (/403|quota|rateLimit|liveChatEnded|404/i.test(String(e.message))) { yparar(); return; }
+      espera = 30000;
+    }
+    if (yt.ouvindo) yt.timer = setTimeout(yciclo, espera);
+  }
+  const ybans = {};   // id da mensagem -> id do banimento (para desfazer)
+  async function moderarYT(tipo, m, linha) {
+    if (!ler(KYT)) return;
+    try {
+      if (tipo === 'apagar') await yapi('DELETE', 'liveChat/messages?id=' + encodeURIComponent(m.id));
+      else {
+        if (tipo === 'banir' && !confirm('Banir ' + m.nome + ' do chat do YouTube?')) return;
+        const snippet = { liveChatId: yt.chatId, type: tipo === 'banir' ? 'permanent' : 'temporary', bannedUserDetails: { channelId: m.uid } };
+        if (tipo === 'timeout') snippet.banDurationSeconds = 600;
+        const j = await yapi('POST', 'liveChat/bans?part=snippet', { snippet });
+        ybans[m.id] = j.id;
+      }
+      linha.classList.add('apagada');
+      if (tipo !== 'apagar') {
+        const ac = linha.querySelector('.acoes'); if (ac) {
+          ac.textContent = '';
+          const bt = document.createElement('button'); bt.className = 'mini sec'; bt.textContent = tipo === 'banir' ? 'Desbanir' : 'Tirar timeout';
+          bt.addEventListener('click', async () => {
+            try { await yapi('DELETE', 'liveChat/bans?id=' + encodeURIComponent(ybans[m.id])); linha.classList.remove('apagada'); bt.remove(); }
+            catch (e) { alert('Não deu: ' + (e.message || e)); }
+          });
+          ac.appendChild(bt);
+        }
+      }
+    } catch (e) { alert('Não deu: ' + (e.message || e)); }
+  }
+
+  $('yentrar').addEventListener('click', yentrar); $('ysair').addEventListener('click', ysair); $('youvir').addEventListener('click', youvir);
   $('entrar').addEventListener('click', entrar); $('sair').addEventListener('click', sair);
   $('enviar').addEventListener('click', enviar); $('ouvir').addEventListener('click', ouvir);
   $('txt').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); } });
   eu = ler(KS + '-eu');
   atualizar(); if (ler(KT) && eu) estado('Conectado como ' + (eu.slug || eu.id) + ' ✓', 'ok');
+  yatualizar(); if (ler(KYT)) yestado('Conectado ao Google ✓ — clique em "Ouvir o YouTube" com a live aberta.', 'ok');
   voltou();
 })();
 </script>
