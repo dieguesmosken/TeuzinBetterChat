@@ -33,6 +33,27 @@
   .m b{color:var(--cor,#fff)}
   .m .acoes{display:flex;gap:4px;flex-shrink:0}
   .m.apagada{opacity:.4;text-decoration:line-through}
+
+  .topo{max-width:1100px;margin:0 auto 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .topo h1{margin:0;flex:1;min-width:200px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:#0b0b12;border:2px solid #3a2470;color:var(--texto);border-radius:999px;padding:6px 13px;font:700 12.5px inherit;font-family:inherit;cursor:pointer}
+  .chip i{width:9px;height:9px;border-radius:50%;background:#6b6580;display:inline-block}
+  .chip.ok i{background:#7dffb3;box-shadow:0 0 8px #7dffb3} .chip.meio i{background:#ffd37d}
+  .chip:hover{border-color:var(--lilas)}
+  .engrenagem{background:linear-gradient(135deg,var(--roxo),var(--lilas))}
+  .cobre{position:fixed;inset:0;background:rgba(5,2,14,.65);z-index:20;display:none}
+  .gaveta{position:fixed;top:0;right:0;bottom:0;width:min(440px,100vw);background:var(--noite);border-left:5px solid var(--roxo);z-index:21;transform:translateX(105%);transition:transform .22s ease;display:flex;flex-direction:column}
+  body.aberta .gaveta{transform:none} body.aberta .cobre{display:block}
+  .gaveta header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #2d1a5c}
+  .gaveta header b{font-size:16px}
+  .abas{display:flex;gap:6px;padding:12px 18px 0;flex-wrap:wrap}
+  .abas button{background:transparent;border:2px solid #3a2470;color:var(--suave);padding:6px 14px}
+  .abas button.on{border-color:var(--lilas);color:#fff;background:#1a1030}
+  .gaveta .corpo{padding:6px 18px 24px;overflow:auto;flex:1}
+  .gaveta .aba{display:none} .gaveta .aba.on{display:block}
+  .gaveta .moldura{border-width:3px;border-radius:18px;margin:12px 0}
+  .principal{max-width:1100px;margin:0 auto}
   #aviso,#avisoyt{color:#ffd37d;font-size:12.5px}
   .tag{font-size:10px;font-weight:800;letter-spacing:.06em;border-radius:6px;padding:1px 6px;margin-right:6px;vertical-align:1px;color:#fff}
   .tag.kick{background:#1a7f37} .tag.youtube{background:#c4302b}
@@ -40,55 +61,84 @@
 </style>
 </head>
 <body>
-<div class="grade">
-  <aside>
-    <section class="moldura">
-      <h1><span>Teuzin</span>BetterChat</h1>
-      <p class="dica">Painel do dono do canal: enviar mensagens e moderar na Kick e no YouTube.</p>
-      <h2>Conexão</h2>
-      <label for="worker">Endereço do worker <small>(o servidor que guarda o segredo do app)</small></label>
-      <input type="text" id="worker" placeholder="https://teuzinbetterchat-kick.SEU.workers.dev" autocomplete="off" spellcheck="false">
-      <label for="cid">Client ID do app da Kick <small>(público)</small></label>
-      <input type="text" id="cid" placeholder="cole o Client ID" autocomplete="off" spellcheck="false">
-      <p class="dica">URL de redirecionamento do app: <b id="redir"></b></p>
-      <div class="linha"><button id="entrar">Entrar com a Kick</button><button class="sec" id="sair" hidden>Sair</button></div>
-      <p id="estado" class="dica">Sem login.</p>
-    </section>
-    <section class="moldura">
-      <h2>Chat da sala</h2>
-      <label for="sala">Número da sala <small>(o mesmo <code>kickid</code> do configurador)</small></label>
-      <input type="text" id="sala" placeholder="ex.: 12345678" autocomplete="off" spellcheck="false">
-      <label for="relay">Relay local <small>(o Kick só deixa programas, não navegadores, lerem o chat: o relay fica no Render; no PC: <code>node relay.js --kick SEUCANAL</code>)</small></label>
-      <input type="text" id="relay" placeholder="wss://teuzinbetterchat-relay.onrender.com" autocomplete="off" spellcheck="false">
-      <div class="linha"><button class="sec" id="ouvir">Ouvir a sala</button></div>
-    </section>
-    <section class="moldura">
-      <h2>YouTube</h2>
-      <label for="ytcid">Client ID do app do Google <small>(público)</small></label>
-      <input type="text" id="ytcid" placeholder="algo.apps.googleusercontent.com" autocomplete="off" spellcheck="false">
-      <p class="dica">URL de redirecionamento: <b id="redir2"></b></p>
-      <div class="linha"><button id="yentrar">Entrar com o Google</button><button class="sec" id="ysair" hidden>Sair</button></div>
-      <p id="yestado" class="dica">Sem login.</p>
-      <label for="ytint">Consultar o chat a cada <small>(segundos; cada consulta gasta 5 da cota diária de 10.000)</small></label>
-      <input type="text" id="ytint" placeholder="10" autocomplete="off" spellcheck="false">
-      <div class="linha"><button class="sec" id="youvir" disabled>Ouvir o YouTube</button></div>
-      <p id="avisoyt"></p>
-    </section>
-  </aside>
-  <main>
-    <section class="moldura">
-      <h2>Enviar mensagem como você</h2>
-      <div class="checks"><label><input type="checkbox" id="dkick" checked> Kick</label><label><input type="checkbox" id="dyt" checked> YouTube</label></div>
-      <textarea id="txt" maxlength="200" placeholder="escreva e envie para o chat" disabled></textarea>
-      <div class="linha"><button id="enviar" disabled>Enviar</button><span id="envio" class="dica"></span></div>
-    </section>
-    <section class="moldura">
-      <h2>Mensagens e moderação</h2>
-      <p id="aviso">Entre e ouça as salas para ver as mensagens com os botões de apagar, timeout e banir.</p>
-      <div id="lista"></div>
-    </section>
-  </main>
+<div class="topo">
+  <h1><span>Teuzin</span>BetterChat <small style="font-weight:500;color:var(--suave);font-size:13px">painel do dono do canal</small></h1>
+  <div class="chips">
+    <button class="chip" id="chipk" data-aba="kick"><i></i>Kick</button>
+    <button class="chip" id="chipy" data-aba="youtube"><i></i>YouTube</button>
+  </div>
+  <button class="engrenagem" id="abrir">⚙ Configurações e conexões</button>
 </div>
+
+<div class="principal">
+  <section class="moldura">
+    <h2>Enviar mensagem como você</h2>
+    <div class="checks"><label><input type="checkbox" id="dkick" checked> Kick</label><label><input type="checkbox" id="dyt" checked> YouTube</label></div>
+    <textarea id="txt" maxlength="200" placeholder="escreva e envie para o chat" disabled></textarea>
+    <div class="linha"><button id="enviar" disabled>Enviar</button><span id="envio" class="dica"></span></div>
+  </section>
+  <section class="moldura">
+    <h2>Mensagens e moderação</h2>
+    <p id="aviso">Abra as configurações, entre nas plataformas e ouça as salas para ver as mensagens com os botões de apagar, timeout e banir.</p>
+    <div id="lista"></div>
+  </section>
+</div>
+
+<div class="cobre" id="cobre"></div>
+<aside class="gaveta" id="gaveta" aria-label="Configurações e conexões">
+  <header><b>⚙ Configurações e conexões</b><button class="sec mini" id="fechar">Fechar ✕</button></header>
+  <div class="abas">
+    <button data-aba="kick" class="on">Kick</button>
+    <button data-aba="youtube">YouTube</button>
+    <button data-aba="avancado">Avançado</button>
+  </div>
+  <div class="corpo">
+    <div class="aba on" data-aba="kick">
+      <section class="moldura">
+        <h2>Login da Kick</h2>
+        <p class="dica">Necessário para enviar mensagens e moderar.</p>
+        <div class="linha"><button id="entrar">Entrar com a Kick</button><button class="sec" id="sair" hidden>Sair</button></div>
+        <p id="estado" class="dica">Sem login.</p>
+      </section>
+      <section class="moldura">
+        <h2>Chat da sala</h2>
+        <label for="sala">Número da sala <small>(o mesmo <code>kickid</code> do configurador)</small></label>
+        <input type="text" id="sala" placeholder="ex.: 12345678" autocomplete="off" spellcheck="false">
+        <label for="relay">Relay <small>(o Kick só deixa programas, não navegadores, lerem o chat; o relay fica no Render)</small></label>
+        <input type="text" id="relay" placeholder="wss://teuzinbetterchat-relay.onrender.com" autocomplete="off" spellcheck="false">
+        <div class="linha"><button class="sec" id="ouvir">Ouvir a sala</button></div>
+      </section>
+    </div>
+    <div class="aba" data-aba="youtube">
+      <section class="moldura">
+        <h2>Login do Google</h2>
+        <p class="dica">Necessário para ler a live, enviar e moderar no YouTube.</p>
+        <div class="linha"><button id="yentrar">Entrar com o Google</button><button class="sec" id="ysair" hidden>Sair</button></div>
+        <p id="yestado" class="dica">Sem login.</p>
+      </section>
+      <section class="moldura">
+        <h2>Chat da live</h2>
+        <label for="ytint">Consultar o chat a cada <small>(segundos; cada consulta gasta 5 da cota diária de 10.000)</small></label>
+        <input type="text" id="ytint" placeholder="10" autocomplete="off" spellcheck="false">
+        <div class="linha"><button class="sec" id="youvir" disabled>Ouvir o YouTube</button></div>
+        <p id="avisoyt"></p>
+      </section>
+    </div>
+    <div class="aba" data-aba="avancado">
+      <section class="moldura">
+        <h2>Conexão</h2>
+        <label for="worker">Endereço do worker <small>(o servidor que guarda o segredo dos apps)</small></label>
+        <input type="text" id="worker" placeholder="https://teuzinbetterchat-kick.SEU.workers.dev" autocomplete="off" spellcheck="false">
+        <label for="cid">Client ID do app da Kick <small>(público)</small></label>
+        <input type="text" id="cid" placeholder="cole o Client ID" autocomplete="off" spellcheck="false">
+        <p class="dica">URL de redirecionamento do app da Kick: <b id="redir"></b></p>
+        <label for="ytcid">Client ID do app do Google <small>(público)</small></label>
+        <input type="text" id="ytcid" placeholder="algo.apps.googleusercontent.com" autocomplete="off" spellcheck="false">
+        <p class="dica">URL de redirecionamento do app do Google: <b id="redir2"></b></p>
+      </section>
+    </div>
+  </div>
+</aside>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -169,6 +219,7 @@
     $('entrar').hidden = logado; $('sair').hidden = !logado;
     $('txt').disabled = $('enviar').disabled = !((logado && eu) || (!!ler(KYT)));
     if (!logado) estado('Sem login.');
+    if (typeof chips === 'function') chips();
   }
   async function sair() {
     const t = ler(KT);
@@ -304,7 +355,7 @@
     const logado = !!ler(KYT);
     $('yentrar').hidden = logado; $('ysair').hidden = !logado; $('youvir').disabled = !logado;
     if (!logado) yestado('Sem login.');
-    atualizar();
+    atualizar(); chips();
   }
   async function ysair() {
     yparar();
@@ -378,6 +429,23 @@
     } catch (e) { alert('Não deu: ' + (e.message || e)); }
   }
 
+
+  // ---- menu de configuracoes + indicadores ----
+  function aba(n) { document.querySelectorAll('.abas button').forEach(b => b.classList.toggle('on', b.dataset.aba === n)); document.querySelectorAll('.gaveta .aba').forEach(d => d.classList.toggle('on', d.dataset.aba === n)); }
+  function gaveta(abrir, n) { if (n) aba(n); document.body.classList.toggle('aberta', abrir); }
+  function chips() {
+    const k = $('chipk'), y = $('chipy');
+    const kl = !!ler(KT) && !!eu, kw = !!(ws && ws.readyState === 1);
+    k.className = 'chip ' + (kl && kw ? 'ok' : (kl || kw ? 'meio' : '')); k.title = 'Kick: ' + (kl ? 'logado' : 'sem login') + ' · ' + (kw ? 'ouvindo a sala' : 'sala desligada');
+    const yl = !!ler(KYT);
+    y.className = 'chip ' + (yl && yt.ouvindo ? 'ok' : (yl ? 'meio' : '')); y.title = 'YouTube: ' + (yl ? 'logado' : 'sem login') + ' · ' + (yt.ouvindo ? 'ouvindo a live' : 'live desligada');
+  }
+  $('abrir').addEventListener('click', () => gaveta(true)); $('fechar').addEventListener('click', () => gaveta(false)); $('cobre').addEventListener('click', () => gaveta(false));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') gaveta(false); });
+  document.querySelectorAll('.abas button').forEach(b => b.addEventListener('click', () => aba(b.dataset.aba)));
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => gaveta(true, c.dataset.aba)));
+  setInterval(chips, 1500);
+
   $('yentrar').addEventListener('click', yentrar); $('ysair').addEventListener('click', ysair); $('youvir').addEventListener('click', youvir);
   $('entrar').addEventListener('click', entrar); $('sair').addEventListener('click', sair);
   $('enviar').addEventListener('click', enviar); $('ouvir').addEventListener('click', ouvir);
@@ -386,6 +454,8 @@
   atualizar(); if (ler(KT) && eu) estado('Conectado como ' + (eu.slug || eu.id) + ' ✓', 'ok');
   yatualizar(); if (ler(KYT)) yestado('Conectado ao Google ✓ — clique em "Ouvir o YouTube" com a live aberta.', 'ok');
   voltou();
+  chips();
+  if (!cfg.worker || (!ler(KT) && !ler(KYT))) gaveta(true, cfg.worker ? 'kick' : 'avancado');
 })();
 </script>
 </body>
