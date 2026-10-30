@@ -99,8 +99,16 @@ async function ligarKick(sala) {
   let ws, tentativas = 0, renova;
   try {
     const clientId = require('crypto').randomUUID();
-    const desc = await postJson('https://web.kick.com/api/v1/realtime/connection', { client: { type: 'web', id: clientId }, accepted_providers: ['centrifugo'] });
-    if (process.env.DEBUG) console.log('descritor:', JSON.stringify(desc).slice(0, 400));
+    const variantes = [
+      { client: { type: 'web', id: clientId }, accepted_providers: [{ provider: 'centrifugo' }] },
+      { client: { type: 'web', id: clientId }, accepted_providers: [{ provider: 'centrifugo' }, { provider: 'pusher' }] },
+      { client_id: clientId, accepted_providers: [{ provider: 'centrifugo' }] },
+      { client: { type: 'web', id: clientId }, accepted_providers: ['centrifugo'] }
+    ];
+    let desc, errDesc;
+    for (const v of variantes) { try { desc = await postJson('https://web.kick.com/api/v1/realtime/connection', v); break; } catch (e) { errDesc = e; } }
+    if (!desc) throw errDesc;
+    console.log('Kick: descritor recebido:', JSON.stringify(desc).slice(0, 300));
     const url = procura(desc, v => /^wss?:\/\//.test(v)) || 'wss://realtime.us-east-1.platform.kick.com/connection/websocket';
     const pegaToken = async () => {
       let ultimo;
