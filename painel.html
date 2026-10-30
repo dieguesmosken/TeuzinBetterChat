@@ -56,7 +56,7 @@
   .principal{max-width:1100px;margin:0 auto}
   #aviso,#avisoyt{color:#ffd37d;font-size:12.5px}
   .tag{font-size:10px;font-weight:800;letter-spacing:.06em;border-radius:6px;padding:1px 6px;margin-right:6px;vertical-align:1px;color:#fff}
-  .tag.kick{background:#1a7f37} .tag.youtube{background:#c4302b}
+  .tag.twitch{background:#9146ff} .tag.kick{background:#1a7f37} .tag.youtube{background:#c4302b}
   .checks{display:flex;gap:16px;margin:4px 0 8px;font-size:13px} .checks label{display:flex;gap:6px;align-items:center;margin:0;font-weight:600}
 </style>
 </head>
@@ -65,6 +65,7 @@
   <h1><span>Teuzin</span>BetterChat <small style="font-weight:500;color:var(--suave);font-size:13px">painel do dono do canal</small></h1>
   <div class="chips">
     <button class="chip" id="chipk" data-aba="kick"><i></i>Kick</button>
+    <button class="chip" id="chipt" data-aba="twitch"><i></i>Twitch</button>
     <button class="chip" id="chipy" data-aba="youtube"><i></i>YouTube</button>
   </div>
   <button class="engrenagem" id="abrir">⚙ Configurações e conexões</button>
@@ -73,7 +74,7 @@
 <div class="principal">
   <section class="moldura">
     <h2>Enviar mensagem como você</h2>
-    <div class="checks"><label><input type="checkbox" id="dkick" checked> Kick</label><label><input type="checkbox" id="dyt" checked> YouTube</label></div>
+    <div class="checks"><label><input type="checkbox" id="dtw" checked> Twitch</label><label><input type="checkbox" id="dkick" checked> Kick</label><label><input type="checkbox" id="dyt" checked> YouTube</label></div>
     <textarea id="txt" maxlength="200" placeholder="escreva e envie para o chat" disabled></textarea>
     <div class="linha"><button id="enviar" disabled>Enviar</button><span id="envio" class="dica"></span></div>
   </section>
@@ -88,12 +89,29 @@
 <aside class="gaveta" id="gaveta" aria-label="Configurações e conexões">
   <header><b>⚙ Configurações e conexões</b><button class="sec mini" id="fechar">Fechar ✕</button></header>
   <div class="abas">
-    <button data-aba="kick" class="on">Kick</button>
+    <button data-aba="twitch" class="on">Twitch</button>
+    <button data-aba="kick">Kick</button>
     <button data-aba="youtube">YouTube</button>
     <button data-aba="avancado">Avançado</button>
   </div>
   <div class="corpo">
-    <div class="aba on" data-aba="kick">
+    <div class="aba on" data-aba="twitch">
+      <section class="moldura">
+        <h2>Login da Twitch</h2>
+        <p class="dica">Necessário para enviar mensagens e moderar. Cadastre esta URL em "URLs de redirecionamento OAuth" do app em dev.twitch.tv: <b id="redir3"></b></p>
+        <div class="linha"><button id="tentrar">Entrar com a Twitch</button><button class="sec" id="tsair" hidden>Sair</button></div>
+        <p id="testado" class="dica">Sem login.</p>
+      </section>
+      <section class="moldura">
+        <h2>Chat do canal</h2>
+        <label for="twcanal">Canal da Twitch</label>
+        <input type="text" id="twcanal" placeholder="teuzin0dev" autocomplete="off" spellcheck="false">
+        <label for="twcid">Client ID do app da Twitch <small>(público)</small></label>
+        <input type="text" id="twcid" autocomplete="off" spellcheck="false">
+        <div class="linha"><button class="sec" id="touvir">Ouvir a Twitch</button></div>
+      </section>
+    </div>
+    <div class="aba" data-aba="kick">
       <section class="moldura">
         <h2>Login da Kick</h2>
         <p class="dica">Necessário para enviar mensagens e moderar.</p>
@@ -151,13 +169,15 @@
   const gravar = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   // Client ID publico do app da Kick do projeto (nao e segredo). O segredo fica so no worker.
   const CID_PADRAO = '01M64V54DJYW4HJP3VQ9CAFBYG';
+  const TW_CID_PADRAO = 'bnqg3ttxcusgbv0z6dzgmjnln64gn9';
   const YT_CID_PADRAO = '1080823221447-nig1ik6okj6s6ssvqt78714seu0dadgu.apps.googleusercontent.com';  // ID publico do app do Google (o segredo fica so no worker)
-  const cfg = Object.assign({ worker: '', cid: CID_PADRAO, sala: '', relay: 'wss://teuzinbetterchat-relay.onrender.com', ytcid: YT_CID_PADRAO, ytint: '10' }, ler(KS) || {});
+  const cfg = Object.assign({ worker: '', cid: CID_PADRAO, sala: '', relay: 'wss://teuzinbetterchat-relay.onrender.com', ytcid: YT_CID_PADRAO, ytint: '10', twcid: TW_CID_PADRAO, twcanal: 'teuzin0dev' }, ler(KS) || {});
   if (!cfg.cid) cfg.cid = CID_PADRAO;
   if (!cfg.ytcid) cfg.ytcid = YT_CID_PADRAO;
-  $('worker').value = cfg.worker; $('cid').value = cfg.cid; $('sala').value = cfg.sala; $('relay').value = cfg.relay; $('ytcid').value = cfg.ytcid; $('ytint').value = cfg.ytint; $('redir2').textContent = redir;
-  const salvarCfg = () => { cfg.worker = $('worker').value.trim().replace(/\/+$/, ''); cfg.cid = $('cid').value.trim(); cfg.sala = $('sala').value.trim(); cfg.relay = $('relay').value.trim(); cfg.ytcid = $('ytcid').value.trim(); cfg.ytint = $('ytint').value.trim(); gravar(KS, cfg); };
-  ['worker', 'cid', 'sala', 'relay', 'ytcid', 'ytint'].forEach(i => $(i).addEventListener('input', salvarCfg));
+  if (!cfg.twcid) cfg.twcid = TW_CID_PADRAO;
+  $('worker').value = cfg.worker; $('cid').value = cfg.cid; $('sala').value = cfg.sala; $('relay').value = cfg.relay; $('ytcid').value = cfg.ytcid; $('ytint').value = cfg.ytint; $('twcid').value = cfg.twcid; $('twcanal').value = cfg.twcanal; $('redir3').textContent = redir; $('redir2').textContent = redir;
+  const salvarCfg = () => { cfg.worker = $('worker').value.trim().replace(/\/+$/, ''); cfg.cid = $('cid').value.trim(); cfg.sala = $('sala').value.trim(); cfg.relay = $('relay').value.trim(); cfg.ytcid = $('ytcid').value.trim(); cfg.ytint = $('ytint').value.trim(); cfg.twcid = $('twcid').value.trim(); cfg.twcanal = $('twcanal').value.trim().replace(/^#/, '').toLowerCase(); gravar(KS, cfg); };
+  ['worker', 'cid', 'sala', 'relay', 'ytcid', 'ytint', 'twcid', 'twcanal'].forEach(i => $(i).addEventListener('input', salvarCfg));
 
   const estado = (t, cl) => { $('estado').textContent = t; $('estado').className = 'dica ' + (cl || ''); $('estado').id = 'estado'; };
 
@@ -174,6 +194,7 @@
       scope: ESCOPOS, code_challenge: desafio, code_challenge_method: 'S256', state });
   }
   async function voltou() {
+    if (/access_token=|error=/.test(location.hash) && /state=tw\./.test(location.hash)) return twVoltou();
     const q = new URLSearchParams(location.search); const code = q.get('code'); if (!code) return;
     if ((q.get('state') || '').startsWith('yt.')) return ytVoltou(q, code);
     history.replaceState(null, '', location.pathname);
@@ -217,8 +238,9 @@
   function atualizar() {
     const logado = !!ler(KT);
     $('entrar').hidden = logado; $('sair').hidden = !logado;
-    $('txt').disabled = $('enviar').disabled = !((logado && eu) || (!!ler(KYT)));
+    $('txt').disabled = $('enviar').disabled = !((logado && eu) || (!!ler(KYT)) || (!!ler(KTW) && tw.eu));
     if (!logado) estado('Sem login.');
+    if (typeof twatualizarUI === 'function') twatualizarUI();
     if (typeof chips === 'function') chips();
   }
   async function sair() {
@@ -231,6 +253,7 @@
   async function enviar() {
     const c = $('txt').value.trim(); if (!c) return;
     const alvos = [];
+    if ($('dtw').checked && tw.eu && ler(KTW)) alvos.push('Twitch');
     if ($('dkick').checked && eu && ler(KT)) alvos.push('Kick');
     if ($('dyt').checked && yt.chatId && ler(KYT)) alvos.push('YouTube');
     if (!alvos.length) { $('envio').textContent = 'nenhum destino pronto (entre e ouça a sala/live)'; return; }
@@ -241,6 +264,12 @@
         const j = await api('POST', 'chat', { broadcaster_user_id: Number(eu.id), content: c, type: 'user' });
         if (j.data && j.data.is_sent === false) throw new Error('a Kick não enviou');
       } catch (e) { erros.push('Kick: ' + (e.message || e)); }
+    }
+    if (alvos.includes('Twitch')) {
+      try {
+        const j = await twapi('POST', 'chat/messages', null, { broadcaster_id: tw.eu.id, sender_id: tw.eu.id, message: c });
+        const d = j.data && j.data[0]; if (d && d.is_sent === false) throw new Error((d.drop_reason && d.drop_reason.message) || 'a Twitch não enviou');
+      } catch (e) { erros.push('Twitch: ' + (e.message || e)); }
     }
     if (alvos.includes('YouTube')) {
       try { await yapi('POST', 'liveChat/messages?part=snippet', { snippet: { liveChatId: yt.chatId, type: 'textMessageEvent', textMessageDetails: { messageText: c.slice(0, 200) } } }); }
@@ -254,6 +283,7 @@
   // ---- moderacao ----
   async function moderar(tipo, m, linha) {
     if (m.plat === 'youtube') return moderarYT(tipo, m, linha);
+    if (m.plat === 'twitch') return moderarTW(tipo, m, linha);
     if (!eu) return;
     try {
       if (tipo === 'apagar') await api('DELETE', 'chat/' + encodeURIComponent(m.id));
@@ -276,12 +306,12 @@
   function linhaMsg(m) {
     const d = document.createElement('div'); d.className = 'm'; d.dataset.mid = String(m.id || ''); d.style.setProperty('--cor', m.cor || '#A970FF');
     const t = document.createElement('div'); t.className = 't';
-    const tg = document.createElement('span'); tg.className = 'tag ' + (m.plat || 'kick'); tg.textContent = m.plat === 'youtube' ? 'YT' : 'KICK';
+    const tg = document.createElement('span'); tg.className = 'tag ' + (m.plat || 'kick'); tg.textContent = m.plat === 'youtube' ? 'YT' : (m.plat === 'twitch' ? 'TWITCH' : 'KICK');
     const b = document.createElement('b'); b.textContent = m.nome; t.append(tg, b, document.createTextNode(': ' + m.texto));
     const a = document.createElement('div'); a.className = 'acoes';
     [['apagar', 'Apagar', ''], ['timeout', '10 min', ''], ['banir', 'Banir', 'perigo']].forEach(([k, rot, cl]) => {
       const bt = document.createElement('button'); bt.className = 'mini sec ' + cl; bt.textContent = rot;
-      bt.disabled = m.plat === 'youtube' ? !ler(KYT) : !eu; bt.addEventListener('click', () => moderar(k, m, d)); a.appendChild(bt);
+      bt.disabled = m.plat === 'youtube' ? !ler(KYT) : (m.plat === 'twitch' ? !(ler(KTW) && tw.eu) : !eu); bt.addEventListener('click', () => moderar(k, m, d)); a.appendChild(bt);
     });
     d.append(t, a); return d;
   }
@@ -305,6 +335,102 @@
     ws.onerror = () => ws.close();
   }
 
+
+  // =====================  TWITCH  =====================
+  const KTW = 'teyo-painel-twitch-token';
+  const tw = { eu: null, ws: null, ouvindo: false, tentar: 0, canal: '' };
+  const twestado = (t, cl) => { $('testado').textContent = t; $('testado').className = 'dica ' + (cl || ''); };
+  const TW_ESCOPOS = 'user:write:chat moderator:manage:chat_messages moderator:manage:banned_users';
+  function tentrar() {
+    salvarCfg(); if (!cfg.twcid) { twestado('Preencha o Client ID da Twitch (aba Twitch).', 'erro'); return; }
+    const state = 'tw.' + aleatorio(16); try { sessionStorage.setItem('tw-state', state); } catch (e) {}
+    location.href = 'https://id.twitch.tv/oauth2/authorize?' + new URLSearchParams({ client_id: cfg.twcid, redirect_uri: redir, response_type: 'token', scope: TW_ESCOPOS, state, force_verify: 'true' });
+  }
+  async function twVoltou() {
+    const h = new URLSearchParams(location.hash.slice(1)); history.replaceState(null, '', location.pathname);
+    let esp = ''; try { esp = sessionStorage.getItem('tw-state') || ''; sessionStorage.removeItem('tw-state'); } catch (e) {}
+    if (h.get('error')) { twestado('A Twitch recusou: ' + (h.get('error_description') || h.get('error')), 'erro'); return; }
+    if (!esp || esp !== h.get('state')) { twestado('Login recusado: o "state" não confere. Tente de novo.', 'erro'); return; }
+    gravar(KTW, { at: h.get('access_token'), ate: Date.now() + 3 * 3600 * 1000 });
+    await twperfil();
+  }
+  async function twapi(metodo, caminho, query, corpo) {
+    const t = ler(KTW); if (!t || Date.now() > t.ate) { gravar(KTW, null); tw.eu = null; atualizar(); throw new Error('sessão da Twitch expirou, entre de novo'); }
+    const r = await fetch('https://api.twitch.tv/helix/' + caminho + (query ? '?' + new URLSearchParams(query) : ''), { method: metodo, headers: { Authorization: 'Bearer ' + t.at, 'Client-Id': cfg.twcid, 'Content-Type': 'application/json' }, body: corpo ? JSON.stringify(corpo) : undefined });
+    const tx = await r.text(); let j = {}; try { j = JSON.parse(tx); } catch (e) {}
+    if (r.status === 401) { gravar(KTW, null); tw.eu = null; atualizar(); throw new Error('sessão da Twitch expirou, entre de novo'); }
+    if (!r.ok) throw new Error((j.message || j.error || 'erro') + ' [' + metodo + ' ' + caminho + ' → HTTP ' + r.status + ']');
+    return j;
+  }
+  async function twperfil() {
+    const t = ler(KTW); if (!t) { tw.eu = null; atualizar(); return; }
+    try {
+      const r = await fetch('https://id.twitch.tv/oauth2/validate', { headers: { Authorization: 'OAuth ' + t.at } });
+      if (!r.ok) throw new Error('token inválido'); const j = await r.json();
+      tw.eu = { id: j.user_id, login: j.login };
+      if (!cfg.twcanal || cfg.twcanal === 'teuzin0dev') { /* mantem o canal informado */ }
+      twestado('Conectado como ' + j.login + ' ✓' + ((j.scopes || []).includes('user:write:chat') ? '' : ' (faltam permissões, entre de novo)'), 'ok');
+    } catch (e) { gravar(KTW, null); tw.eu = null; twestado('Sessão inválida: ' + (e.message || e), 'erro'); }
+    atualizar();
+  }
+  function twsair() {
+    const t = ler(KTW);
+    if (t) { fetch('https://id.twitch.tv/oauth2/revoke', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ client_id: cfg.twcid, token: t.at }) }).catch(() => {}); }
+    gravar(KTW, null); tw.eu = null; twestado('Sem login.'); atualizar();
+  }
+  function twatualizarUI() {
+    const logado = !!ler(KTW) && !!tw.eu;
+    $('tentrar').hidden = !!ler(KTW); $('tsair').hidden = !ler(KTW);
+    if (!ler(KTW)) twestado('Sem login.');
+  }
+  // chat da Twitch: IRC anonimo por WebSocket (leitura publica, nao precisa de login)
+  function touvir() {
+    salvarCfg(); const canal = cfg.twcanal; if (!canal) { twestado('Informe o canal da Twitch.', 'erro'); return; }
+    if (tw.ouvindo) { tw.ouvindo = false; clearTimeout(tw.timer); if (tw.ws) { tw.ws.onclose = null; tw.ws.close(); } $('touvir').textContent = 'Ouvir a Twitch'; return; }
+    tw.ouvindo = true; $('touvir').textContent = 'Parar a Twitch'; twconectar(canal);
+  }
+  function twconectar(canal) {
+    if (!tw.ouvindo) return;
+    const w = new WebSocket('wss://irc-ws.chat.twitch.tv:443'); tw.ws = w;
+    w.onopen = () => { w.send('CAP REQ :twitch.tv/tags twitch.tv/commands'); w.send('NICK justinfan' + Math.floor(10000 + Math.random() * 80000)); w.send('JOIN #' + canal); };
+    w.onmessage = ev => ev.data.split('\r\n').forEach(linha => {
+      if (!linha) return;
+      if (linha.startsWith('PING')) { w.send('PONG :tmi.twitch.tv'); return; }
+      const mt = linha.match(/^@(\S+) /); const tags = {}; if (mt) mt[1].split(';').forEach(s => { const i = s.indexOf('='); tags[s.slice(0, i)] = s.slice(i + 1); });
+      const resto = mt ? linha.slice(mt[0].length) : linha; const l = $('lista');
+      if (/ JOIN #/.test(resto) && tags.id === undefined && /justinfan/.test(resto)) { $('aviso').textContent = 'Twitch conectada ✓ — #' + canal; return; }
+      const cm = resto.match(/^:([^!]+)![^ ]+ PRIVMSG #\S+ :(.*)$/);
+      if (cm) {
+        let texto = cm[2], acao = false; const am = texto.match(/^\u0001ACTION (.*)\u0001$/); if (am) { texto = am[1]; acao = true; }
+        l.appendChild(linhaMsg({ plat: 'twitch', id: tags.id, uid: tags['user-id'], nome: tags['display-name'] || cm[1], cor: tags.color || '#9146FF', texto: (acao ? '* ' : '') + texto }));
+        while (l.children.length > 120) l.firstChild.remove(); l.scrollTop = l.scrollHeight; return;
+      }
+      if (/ CLEARMSG #/.test(resto) && tags['target-msg-id']) l.querySelectorAll('[data-mid]').forEach(e => { if (e.dataset.mid === tags['target-msg-id']) e.classList.add('apagada'); });
+    });
+    w.onclose = () => { if (tw.ouvindo) tw.timer = setTimeout(() => twconectar(canal), 4000); };
+    w.onerror = () => w.close();
+  }
+  async function moderarTW(tipo, m, linha) {
+    if (!tw.eu) return;
+    const base = { broadcaster_id: tw.eu.id, moderator_id: tw.eu.id };
+    try {
+      if (tipo === 'apagar') await twapi('DELETE', 'moderation/chat', { ...base, message_id: m.id });
+      else if (tipo === 'timeout') await twapi('POST', 'moderation/bans', base, { data: { user_id: String(m.uid), duration: 600, reason: 'timeout pelo painel' } });
+      else if (tipo === 'banir') { if (!confirm('Banir ' + m.nome + '?')) return; await twapi('POST', 'moderation/bans', base, { data: { user_id: String(m.uid), reason: 'banido pelo painel' } }); }
+      linha.classList.add('apagada');
+      if (tipo !== 'apagar') {
+        const ac = linha.querySelector('.acoes'); if (ac) {
+          ac.textContent = '';
+          const bt = document.createElement('button'); bt.className = 'mini sec'; bt.textContent = tipo === 'banir' ? 'Desbanir' : 'Tirar timeout';
+          bt.addEventListener('click', async () => {
+            try { await twapi('DELETE', 'moderation/bans', { ...base, user_id: String(m.uid) }); linha.classList.remove('apagada'); bt.remove(); }
+            catch (e) { alert('Não deu: ' + (e.message || e)); }
+          });
+          ac.appendChild(bt);
+        }
+      }
+    } catch (e) { alert('Não deu: ' + (e.message || e)); }
+  }
 
   // =====================  YOUTUBE  =====================
   const KYT = 'teyo-painel-yt-token';
@@ -437,6 +563,8 @@
     const k = $('chipk'), y = $('chipy');
     const kl = !!ler(KT) && !!eu, kw = !!(ws && ws.readyState === 1);
     k.className = 'chip ' + (kl && kw ? 'ok' : (kl || kw ? 'meio' : '')); k.title = 'Kick: ' + (kl ? 'logado' : 'sem login') + ' · ' + (kw ? 'ouvindo a sala' : 'sala desligada');
+    const t = $('chipt'), tl = !!ler(KTW) && !!tw.eu;
+    t.className = 'chip ' + (tl && tw.ouvindo ? 'ok' : (tl || tw.ouvindo ? 'meio' : '')); t.title = 'Twitch: ' + (tl ? 'logado' : 'sem login') + ' · ' + (tw.ouvindo ? 'ouvindo o chat' : 'chat desligado');
     const yl = !!ler(KYT);
     y.className = 'chip ' + (yl && yt.ouvindo ? 'ok' : (yl ? 'meio' : '')); y.title = 'YouTube: ' + (yl ? 'logado' : 'sem login') + ' · ' + (yt.ouvindo ? 'ouvindo a live' : 'live desligada');
   }
@@ -446,6 +574,7 @@
   document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => gaveta(true, c.dataset.aba)));
   setInterval(chips, 1500);
 
+  $('tentrar').addEventListener('click', tentrar); $('tsair').addEventListener('click', twsair); $('touvir').addEventListener('click', touvir);
   $('yentrar').addEventListener('click', yentrar); $('ysair').addEventListener('click', ysair); $('youvir').addEventListener('click', youvir);
   $('entrar').addEventListener('click', entrar); $('sair').addEventListener('click', sair);
   $('enviar').addEventListener('click', enviar); $('ouvir').addEventListener('click', ouvir);
@@ -454,8 +583,9 @@
   atualizar(); if (ler(KT) && eu) estado('Conectado como ' + (eu.slug || eu.id) + ' ✓', 'ok');
   yatualizar(); if (ler(KYT)) yestado('Conectado ao Google ✓ — clique em "Ouvir o YouTube" com a live aberta.', 'ok');
   voltou();
+  twperfil();
   chips();
-  if (!cfg.worker || (!ler(KT) && !ler(KYT))) gaveta(true, cfg.worker ? 'kick' : 'avancado');
+  if (!ler(KT) && !ler(KYT) && !ler(KTW)) gaveta(true, 'twitch');
 })();
 </script>
 </body>
