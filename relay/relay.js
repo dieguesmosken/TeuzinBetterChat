@@ -95,8 +95,9 @@ function tratarKick(ev, dado) {
   }
 }
 
+let tentativas = 0;
 async function ligarKick(sala) {
-  let ws, tentativas = 0, renova;
+  let ws, renova;
   try {
     const clientId = require('crypto').randomUUID();
     const variantes = [
@@ -105,11 +106,12 @@ async function ligarKick(sala) {
       { client_id: clientId, accepted_providers: [{ provider: 'centrifugo' }] },
       { client: { type: 'web', id: clientId }, accepted_providers: ['centrifugo'] }
     ];
-    let desc, errDesc;
-    for (const v of variantes) { try { desc = await postJson('https://web.kick.com/api/v1/realtime/connection', v); break; } catch (e) { errDesc = e; } }
-    if (!desc) throw errDesc;
-    console.log('Kick: descritor recebido:', JSON.stringify(desc).slice(0, 300));
-    const url = procura(desc, v => /^wss?:\/\//.test(v)) || 'wss://realtime.us-east-1.platform.kick.com/connection/websocket';
+    // O passo de "descritor" da Kick recusa o pedido (HTTP 400) e nao e documentado; tentamos, mas nao dependemos dele.
+    let desc = null;
+    for (const v of variantes) { try { desc = await postJson('https://web.kick.com/api/v1/realtime/connection', v); break; } catch (e) { /* segue */ } }
+    if (desc) console.log('Kick: descritor recebido:', JSON.stringify(desc).slice(0, 300));
+    const conhecidos = ['wss://realtime.us-east-1.platform.kick.com/connection/websocket', 'wss://realtime.us-west-2.platform.kick.com/connection/websocket'];
+    const url = procura(desc, v => /^wss?:\/\//.test(v)) || conhecidos[tentativas % conhecidos.length];
     const pegaToken = async () => {
       let ultimo;
       for (const corpo of [{ client_id: clientId }, { client: { type: 'web', id: clientId } }]) {
