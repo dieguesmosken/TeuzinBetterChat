@@ -55,8 +55,8 @@
       <h2>Chat da sala</h2>
       <label for="sala">Número da sala <small>(o mesmo <code>kickid</code> do configurador)</small></label>
       <input type="text" id="sala" placeholder="ex.: 12345678" autocomplete="off" spellcheck="false">
-      <label for="relay">Relay local <small>(o Kick só deixa programas, não navegadores, lerem o chat: rode <code>node relay.js --kick SEUCANAL</code>)</small></label>
-      <input type="text" id="relay" placeholder="ws://localhost:8787" autocomplete="off" spellcheck="false">
+      <label for="relay">Relay local <small>(o Kick só deixa programas, não navegadores, lerem o chat: o relay fica no Render; no PC: <code>node relay.js --kick SEUCANAL</code>)</small></label>
+      <input type="text" id="relay" placeholder="wss://teuzinbetterchat-relay.onrender.com" autocomplete="off" spellcheck="false">
       <div class="linha"><button class="sec" id="ouvir">Ouvir a sala</button></div>
     </section>
   </aside>
@@ -85,7 +85,7 @@
   const gravar = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   // Client ID publico do app da Kick do projeto (nao e segredo). O segredo fica so no worker.
   const CID_PADRAO = '01M64V54DJYW4HJP3VQ9CAFBYG';
-  const cfg = Object.assign({ worker: '', cid: CID_PADRAO, sala: '', relay: 'ws://localhost:8787' }, ler(KS) || {});
+  const cfg = Object.assign({ worker: '', cid: CID_PADRAO, sala: '', relay: 'wss://teuzinbetterchat-relay.onrender.com' }, ler(KS) || {});
   if (!cfg.cid) cfg.cid = CID_PADRAO;
   $('worker').value = cfg.worker; $('cid').value = cfg.cid; $('sala').value = cfg.sala; $('relay').value = cfg.relay;
   const salvarCfg = () => { cfg.worker = $('worker').value.trim().replace(/\/+$/, ''); cfg.cid = $('cid').value.trim(); cfg.sala = $('sala').value.trim(); cfg.relay = $('relay').value.trim(); gravar(KS, cfg); };
@@ -194,7 +194,7 @@
   // ---- ouvir a sala (WebSocket publico, o mesmo do chat) ----
   let ws, ouvindo = false;
   function ouvir() {
-    salvarCfg(); if (!cfg.relay) { $('aviso').textContent = 'Informe o endereço do relay (ws://localhost:8787).'; return; }
+    salvarCfg(); if (!cfg.relay) { $('aviso').textContent = 'Informe o endereço do relay.'; return; }
     if (ws) { try { ws.onclose = null; ws.close(); } catch (e) {} }
     try { ws = new WebSocket(cfg.relay); } catch (e) { $('aviso').textContent = 'Endereço do relay inválido.'; return; }
     ws.onopen = () => { $('aviso').textContent = 'Relay conectado ✓ — aguardando mensagens do Kick'; };
