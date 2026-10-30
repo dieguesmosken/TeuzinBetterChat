@@ -56,9 +56,18 @@ if (usuario) ligarTikTok();
 const WS = require('ws');
 const UA = 'Mozilla/5.0 (TeuzinBetterChat relay)';
 async function postJson(url, corpo) {
-  const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json', 'user-agent': UA, origin: 'https://kick.com' }, body: JSON.stringify(corpo || {}) });
-  if (!r.ok) throw new Error(url + ' -> HTTP ' + r.status);
-  return r.json();
+  const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json', 'user-agent': UA, origin: 'https://kick.com', referer: 'https://kick.com/' }, body: JSON.stringify(corpo || {}) });
+  const txt = await r.text();
+  if (!r.ok) throw new Error(url + ' -> HTTP ' + r.status + ' ' + txt.slice(0, 200));
+  try { return JSON.parse(txt); } catch (e) { throw new Error(url + ' -> resposta nao e JSON: ' + txt.slice(0, 120)); }
+}
+// procura um valor em qualquer nivel da resposta (o formato nao e documentado)
+function procura(o, teste, prof = 0) {
+  if (o == null || prof > 6) return '';
+  if (typeof o === 'string') return teste(o) ? o : '';
+  if (typeof o !== 'object') return '';
+  for (const k of Object.keys(o)) { const r = typeof o[k] === 'string' ? (teste(o[k], k) ? o[k] : '') : procura(o[k], teste, prof + 1); if (r) return r; }
+  return '';
 }
 async function salaDoKick(entrada) {
   if (/^\d+$/.test(entrada)) return entrada;
@@ -90,11 +99,19 @@ async function ligarKick(sala) {
   let ws, tentativas = 0, renova;
   try {
     const clientId = require('crypto').randomUUID();
-    const desc = await postJson('https://web.kick.com/api/v1/realtime/connection', { client_id: clientId, accepted_providers: ['centrifugo'] });
-    const url = achar(desc, ['url']) || achar(desc.data || {}, ['url']) || 'wss://realtime.us-east-1.platform.kick.com/connection/websocket';
-    const pegaToken = async () => { const a = await postJson('https://web.kick.com/api/v1/realtime/auth/connection', { client_id: clientId }); return achar(a, ['token', 'jwt']) || achar(a.data || {}, ['token', 'jwt']); };
+    const desc = await postJson('https://web.kick.com/api/v1/realtime/connection', { client: { type: 'web', id: clientId }, accepted_providers: ['centrifugo'] });
+    if (process.env.DEBUG) console.log('descritor:', JSON.stringify(desc).slice(0, 400));
+    const url = procura(desc, v => /^wss?:\/\//.test(v)) || 'wss://realtime.us-east-1.platform.kick.com/connection/websocket';
+    const pegaToken = async () => {
+      let ultimo;
+      for (const corpo of [{ client_id: clientId }, { client: { type: 'web', id: clientId } }]) {
+        try { const a = await postJson('https://web.kick.com/api/v1/realtime/auth/connection', corpo);
+          if (process.env.DEBUG) console.log('auth:', JSON.stringify(a).slice(0, 80) + '…');
+          const t = procura(a, (v, k) => (k === 'token' || k === 'jwt') || /^eyJ/.test(v)); if (t) return t; } catch (e) { ultimo = e; }
+      }
+      throw ultimo || new Error('a Kick nao devolveu token');
+    };
     const token = await pegaToken();
-    if (!token) throw new Error('a Kick nao devolveu token');
     ws = new WS(url);   // sem Origin
     let id = 0, vivo = Date.now();
     ws.on('open', () => { ws.send(JSON.stringify({ connect: { token, name: 'js' }, id: ++id })); });
