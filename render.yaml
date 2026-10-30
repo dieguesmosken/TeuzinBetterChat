@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: teuzinbetterchat-relay
+    runtime: node
+    rootDir: relay
+    plan: free
+    buildCommand: npm install
+    startCommand: node relay.js
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: KICK_SALA
+        value: teuzin0dev
+      - key: ALLOWED_ORIGINS
+        value: https://www.teuzin.com.br,https://teuzin.com.br

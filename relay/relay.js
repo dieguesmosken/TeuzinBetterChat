@@ -16,10 +16,16 @@ const kick = (arg('kick') || process.env.KICK_SALA || '').trim();
 const porta = parseInt(process.env.PORT || '8787', 10);
 if (!usuario && !kick) { console.error('Uso: node relay.js --kick sala_ou_canal [--tiktok usuario]'); process.exit(1); }
 
-// escuta so neste computador (127.0.0.1)
-const wss = new WebSocketServer({ host: '127.0.0.1', port: porta });
+// Local: escuta so neste computador (127.0.0.1). Na nuvem (Render): defina HOST=0.0.0.0 (ja vem pelo render.yaml).
+// ALLOWED_ORIGINS (opcional): sites autorizados a conectar, separados por virgula. Vazio = qualquer um.
+const http = require('http');
+const host = process.env.HOST || '127.0.0.1';
+const origensOk = (process.env.ALLOWED_ORIGINS || '').split(',').map(x => x.trim()).filter(Boolean);
+const servidor = http.createServer((req, res) => { res.writeHead(200, { 'content-type': 'text/plain' }); res.end('TeuzinBetterChat relay ok'); });
+const wss = new WebSocketServer({ server: servidor, verifyClient: ({ origin }) => !origensOk.length || !origin || origensOk.includes(origin) });
+servidor.listen(porta, host);
 const enviar = obj => { const s = JSON.stringify(obj); wss.clients.forEach(c => { if (c.readyState === 1) c.send(s); }); };
-console.log(`Relay ouvindo em ws://localhost:${porta}`);
+console.log(`Relay ouvindo em ${host}:${porta}`);
 
 function ligarTikTok() {
   const lib = require('tiktok-live-connector');
