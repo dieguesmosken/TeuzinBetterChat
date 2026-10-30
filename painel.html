@@ -34,6 +34,7 @@
   .m .acoes{display:flex;gap:4px;flex-shrink:0}
   .m.apagada{opacity:.4;text-decoration:line-through}
 
+  .dica a{color:var(--lilas)}
   .topo{max-width:1100px;margin:0 auto 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   .topo h1{margin:0;flex:1;min-width:200px}
   .chips{display:flex;gap:8px;flex-wrap:wrap}
@@ -101,6 +102,7 @@
         <p class="dica">Necessário para enviar mensagens e moderar. Cadastre esta URL em "URLs de redirecionamento OAuth" do app em dev.twitch.tv: <b id="redir3"></b></p>
         <div class="linha"><button id="tentrar">Entrar com a Twitch</button><button class="sec" id="tsair" hidden>Sair</button></div>
         <p id="testado" class="dica">Sem login.</p>
+        <p class="dica">Ao entrar você concorda com os <a href="https://www.teuzin.com.br/TeuzinBetterChat/termos.html" target="_blank" rel="noopener">Termos de uso</a> e a <a href="https://www.teuzin.com.br/TeuzinBetterChat/privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</p>
       </section>
       <section class="moldura">
         <h2>Chat do canal</h2>
@@ -117,6 +119,7 @@
         <p class="dica">Necessário para enviar mensagens e moderar.</p>
         <div class="linha"><button id="entrar">Entrar com a Kick</button><button class="sec" id="sair" hidden>Sair</button></div>
         <p id="estado" class="dica">Sem login.</p>
+        <p class="dica">Ao entrar você concorda com os <a href="https://www.teuzin.com.br/TeuzinBetterChat/termos.html" target="_blank" rel="noopener">Termos de uso</a> e a <a href="https://www.teuzin.com.br/TeuzinBetterChat/privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</p>
       </section>
       <section class="moldura">
         <h2>Chat da sala</h2>
@@ -133,6 +136,7 @@
         <p class="dica">Necessário para ler a live, enviar e moderar no YouTube.</p>
         <div class="linha"><button id="yentrar">Entrar com o Google</button><button class="sec" id="ysair" hidden>Sair</button></div>
         <p id="yestado" class="dica">Sem login.</p>
+        <p class="dica">Ao entrar com o Google você também concorda com os <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener">Termos de Serviço do YouTube</a>. O app usa os serviços de API do YouTube; veja a <a href="https://www.teuzin.com.br/TeuzinBetterChat/privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</p>
       </section>
       <section class="moldura">
         <h2>Chat da live</h2>
@@ -143,6 +147,7 @@
       </section>
     </div>
     <div class="aba" data-aba="avancado">
+      <p class="dica" style="margin-top:12px"><a href="https://www.teuzin.com.br/TeuzinBetterChat/privacidade.html" target="_blank" rel="noopener">Privacidade</a> · <a href="https://www.teuzin.com.br/TeuzinBetterChat/termos.html" target="_blank" rel="noopener">Termos de uso</a></p>
       <section class="moldura">
         <h2>Conexão</h2>
         <label for="worker">Endereço do worker <small>(o servidor que guarda o segredo dos apps)</small></label>

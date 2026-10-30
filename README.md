@@ -68,9 +68,15 @@ chat.html?channel=seucanal&size=24&max=20&fade=60&avatar=1
 - **Respostas de bots não aparecem:** use `hide=` (vazio) e, para comandos, `cmds=1`.
 - **Fotos de perfil:** vêm de serviços públicos (unavatar, com plano B pela IVR). Quem não tiver foto aparece com a inicial do nome.
 
-## Privacidade
+## Privacidade e termos
 
-O widget só **lê** o chat público. Nada é enviado ao canal e nenhuma credencial é guardada. As APIs usadas são todas públicas (Twitch badges, IVR, 7TV, BTTV, FFZ, unavatar).
+- [Política de Privacidade](https://www.teuzin.com.br/TeuzinBetterChat/privacidade.html) · [Termos de Uso](https://www.teuzin.com.br/TeuzinBetterChat/termos.html) (fontes em `privacidade.html` e `termos.html`).
+- **Chat só para exibir:** o widget lê o chat público e não grava mensagens. Sem cadastro, sem anúncios, sem estatísticas.
+- **Login (2.0, opcional):** os tokens de Twitch, Kick e Google/YouTube ficam só no `localStorage` do seu navegador. O worker (`kick-worker/`) guarda o segredo dos apps da Kick e do Google e apenas repassa os pedidos; o relay (`relay/`) só repassa o chat público.
+- **Cuidado com o link:** a opção "colocar o login no link" e a chave da API do YouTube no link tornam o link tão sensível quanto uma senha. Nunca mostre na live.
+- **Serviços de terceiros:** fotos de perfil (unavatar/IVR/DecAPI, desligado por padrão), emotes (7TV, BTTV, FFZ) e selos da Twitch recebem o IP de quem roda o chat; o configurador carrega fonte do Google Fonts.
+- O TikTok usa uma biblioteca não oficial e é experimental.
+- Não é afiliado a Twitch, Kick, Google/YouTube ou TikTok.
 
 ## Licença
 

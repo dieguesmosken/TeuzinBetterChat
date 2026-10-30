@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Política de Privacidade · TeuzinBetterChat</title>
+<meta name="description" content="Como o TeuzinBetterChat trata dados: o que fica no seu navegador, o que passa pelos servidores e quais serviços de terceiros são usados.">
+<meta name="robots" content="index,follow">
+<style>
+  :root{--bg:#0b0816;--pn:#14102a;--bd:#2d1a5c;--tx:#ece8f7;--su:#a79fc4;--ac:#A970FF;--ac2:#7B2CF2}
+  @media (prefers-color-scheme:light){:root{--bg:#f6f3ff;--pn:#fff;--bd:#d9ccf5;--tx:#1a1530;--su:#5a5277;--ac:#6a2fd0;--ac2:#7B2CF2}}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.65 "Segoe UI",system-ui,sans-serif}
+  main{max-width:820px;margin:0 auto;padding:28px 18px 60px}
+  h1{font-size:30px;margin:6px 0 4px} h1 b{color:var(--ac)} h2{font-size:20px;margin:34px 0 8px;color:var(--ac);border-bottom:1px solid var(--bd);padding-bottom:6px}
+  h3{font-size:16px;margin:20px 0 4px} p,li{color:var(--tx)} .su{color:var(--su);font-size:14px}
+  a{color:var(--ac)} nav{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;margin-bottom:10px}
+  .caixa{background:var(--pn);border:1px solid var(--bd);border-radius:14px;padding:14px 18px;margin:14px 0}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;margin:10px 0} th,td{border:1px solid var(--bd);padding:8px 10px;text-align:left;vertical-align:top} th{background:var(--pn)}
+  .tabela{overflow-x:auto} code{background:var(--pn);border:1px solid var(--bd);border-radius:5px;padding:0 5px;font-size:13.5px}
+  footer{margin-top:40px;font-size:13px;color:var(--su)}
+</style>
+</head>
+<body><main>
+<nav><a href="config-chat.html">Configurador</a><a href="painel.html">Painel</a><a href="privacidade.html">Privacidade</a><a href="termos.html">Termos de uso</a><a href="https://github.com/dieguesmosken/TeuzinBetterChat">Código no GitHub</a></nav>
+<h1>Política de <b>Privacidade</b></h1>
+<p class="su">TeuzinBetterChat · versão 2.0 · vigente desde 30 de outubro de 2026</p>
+
+<div class="caixa"><b>Resumo em linguagem simples.</b>
+<ul>
+<li>Não temos cadastro, banco de dados de usuários, anúncios, rastreadores nem estatísticas de uso.</li>
+<li>Seus logins (tokens) e configurações ficam <b>só no seu navegador</b> (<code>localStorage</code>). Nós não os guardamos em servidor.</li>
+<li>As mensagens do chat são lidas, mostradas na tela e <b>não são gravadas</b> por nós.</li>
+<li>Para o login com Kick e Google/YouTube existe um servidor intermediário (Cloudflare Worker) que usa o segredo do aplicativo. Ele <b>repassa</b> os dados e não armazena nada.</li>
+<li>Nada é vendido, alugado ou usado para publicidade.</li>
+</ul></div>
+
+<h2>1. Quem somos</h2>
+<p>O TeuzinBetterChat é um projeto gratuito e de código aberto (licença MIT) criado por <b>Matheus (teuzin0dev)</b>, pessoa física, sem fins lucrativos. Ele junta o chat da Twitch, Kick, YouTube e TikTok numa tela para a <i>Fonte de Navegador</i> do OBS e oferece um painel para o dono do canal enviar mensagens e moderar. O endereço é <code>www.teuzin.com.br/TeuzinBetterChat</code> e o código está em <a href="https://github.com/dieguesmosken/TeuzinBetterChat">github.com/dieguesmosken/TeuzinBetterChat</a>.</p>
+<p>Para fins da Lei Geral de Proteção de Dados (LGPD, Lei 13.709/2018), o responsável pelas informações descritas aqui é o desenvolvedor acima. Contato na seção 12.</p>
+
+<h2>2. O que o aplicativo trata</h2>
+<div class="tabela"><table>
+<tr><th>Informação</th><th>Para quê</th><th>Onde fica</th></tr>
+<tr><td><b>Tokens de acesso</b> (Twitch, Kick, Google/YouTube) e, quando existir, o <i>refresh token</i></td><td>Manter você conectado para ler o chat, enviar mensagens e moderar</td><td>No <code>localStorage</code> do seu navegador. Não são enviados a nós. Só seguem para a própria plataforma (e para o worker, na troca/renovação do login de Kick e Google)</td></tr>
+<tr><td><b>Dados básicos da conta</b> que a plataforma devolve ao logar (identificador, nome de usuário do canal)</td><td>Saber qual é o seu canal e mostrar "Conectado como…"</td><td>No seu navegador</td></tr>
+<tr><td><b>Configurações</b>: canal, Client IDs, endereço do worker/relay, intervalo, filtros e, se você optar, a chave da API do YouTube</td><td>Lembrar suas escolhas</td><td>No seu navegador. O <b>link gerado para o OBS</b> também contém essas escolhas; só leva o token ou a chave se você marcar essa opção</td></tr>
+<tr><td><b>Mensagens do chat</b> (nome de exibição, cor, selos, texto, foto de perfil)</td><td>Mostrar o chat na tela e permitir apagar, dar timeout ou banir</td><td>Só em memória, na página aberta (o painel mantém as últimas mensagens na tela). <b>Não gravamos.</b> O relay apenas repassa em tempo real</td></tr>
+<tr><td><b>Ações de moderação e mensagens enviadas</b></td><td>Executar o que você pediu no clique</td><td>Vão direto para a plataforma (pelo worker, no caso da Kick). Não guardamos histórico</td></tr>
+<tr><td><b>Dados técnicos</b> (endereço IP, navegador, data/hora)</td><td>Funcionamento e segurança dos provedores de hospedagem</td><td>Nos registros dos provedores (item 4). Nós não temos acesso a um painel de análise de visitantes</td></tr>
+</table></div>
+<p>Não coletamos senhas das plataformas: o login acontece na página oficial de cada uma (Twitch, Kick, Google). Também não usamos cookies próprios nem ferramentas de análise ou publicidade.</p>
+
+<h2>3. Mensagens e dados de outras pessoas</h2>
+<p>O chat de uma live contém dados de quem escreve (apelido, mensagem, foto). Eles já são públicos na plataforma de origem. O aplicativo só os <b>exibe</b> para você e para quem assiste sua transmissão, e não os armazena. Quem monta o overlay decide o que aparece na live e é responsável por esse uso (por exemplo, não exibir conteúdo ilegal ou dados pessoais de terceiros). Se uma mensagem for apagada ou o usuário for banido, a remoção acontece na plataforma original; o aplicativo não mantém cópia.</p>
+
+<h2>4. Serviços que participam do funcionamento</h2>
+<p>Para funcionar, o aplicativo conversa com outros serviços. Cada um trata os dados segundo a própria política.</p>
+<div class="tabela"><table>
+<tr><th>Serviço</th><th>O que faz aqui</th><th>O que ele pode receber</th></tr>
+<tr><td><b>GitHub Pages</b> (hospedagem do site)</td><td>Entrega as páginas e o código</td><td>IP e dados da requisição, nos registros do GitHub</td></tr>
+<tr><td><b>Cloudflare Workers</b> (worker de login)</td><td>Guarda o segredo dos aplicativos da Kick e do Google e faz a troca/renovação/revogação de tokens; repassa pedidos de enviar/apagar/moderar na Kick</td><td>Código de login, tokens e o conteúdo do pedido, apenas durante o processamento; IP nos registros da Cloudflare. <b>O código do worker não grava nem registra esse conteúdo</b></td></tr>
+<tr><td><b>Render</b> (relay do chat da Kick/TikTok)</td><td>Lê o chat público da Kick (e, se ativado, do TikTok) e repassa por WebSocket</td><td>Mensagens públicas em trânsito; IP de quem conecta nos registros do Render. O relay <b>não grava</b> mensagens e não recebe seus tokens</td></tr>
+<tr><td><b>Twitch</b> (login, IRC, API, selos)</td><td>Leitura do chat, envio e moderação</td><td>Seu token e os pedidos que você faz</td></tr>
+<tr><td><b>Kick</b> (login, API oficial, chat)</td><td>Envio, moderação e leitura do chat</td><td>Idem</td></tr>
+<tr><td><b>Google / YouTube</b> (login e YouTube Data API)</td><td>Detectar sua live, ler o chat, enviar, apagar e moderar</td><td>Seu token e os pedidos que você faz (ver item 6)</td></tr>
+<tr><td><b>TikTok</b> (opcional, não oficial)</td><td>Leitura do chat pelo relay, via biblioteca de terceiros</td><td>O nome de usuário do TikTok informado</td></tr>
+<tr><td><b>Serviços de imagens e emotes</b>: IVR, DecAPI, unavatar, 7TV, BetterTTV, FrankerFaceZ, CDN de selos da Twitch</td><td>Fotos de perfil, selos e emotes</td><td>O IP do dispositivo que roda o chat/OBS e, para fotos de perfil, o <b>nome de usuário</b> de quem escreveu (recurso que vem <b>desligado</b> por padrão)</td></tr>
+<tr><td><b>Google Fonts</b> (só no configurador)</td><td>Carregar a fonte da página</td><td>O IP de quem abre o configurador</td></tr>
+</table></div>
+
+<h2>5. Para que usamos e em que base legal</h2>
+<ul>
+<li><b>Ler e mostrar o chat público</b>: legítimo interesse do streamer em exibir o chat da própria transmissão (LGPD, art. 7º, IX), sem gravação.</li>
+<li><b>Login, envio de mensagens e moderação</b>: execução do serviço que você pediu e <b>consentimento</b> dado ao autorizar o aplicativo na plataforma (art. 7º, I e V). Você pode revogar a qualquer momento (item 8).</li>
+<li><b>Funcionamento e segurança</b> dos provedores: legítimo interesse.</li>
+</ul>
+<p>Não usamos os dados para anúncios, perfis, venda, análise de crédito nem qualquer finalidade diferente das acima.</p>
+
+<h2>6. Informações específicas sobre Google e YouTube</h2>
+<p><b>O TeuzinBetterChat usa os serviços de API do YouTube.</b> Ao entrar com o Google você também concorda com os <a href="https://www.youtube.com/t/terms">Termos de Serviço do YouTube</a>, e o tratamento de dados pelo Google segue a <a href="https://policies.google.com/privacy">Política de Privacidade do Google</a>.</p>
+<ul>
+<li><b>Permissão pedida:</b> <code>https://www.googleapis.com/auth/youtube.force-ssl</code>. Ela serve para (a) encontrar a transmissão ativa do seu canal, (b) ler as mensagens do chat, (c) enviar mensagens e (d) apagar mensagens, aplicar timeout e banir usuários. Essas ações só acontecem quando você clica; nada é automático.</li>
+<li><b>O que acessamos:</b> dados do seu canal e da live ativa (identificador do chat) e as mensagens públicas do chat. Não acessamos e-mail, contatos, Drive nem outros dados da sua conta Google.</li>
+<li><b>Onde fica:</b> o token de acesso e o de renovação ficam no seu navegador. O worker só os usa, no instante da troca ou renovação, para falar com o Google. Não guardamos mensagens do chat; nada é mantido por mais tempo do que a página aberta.</li>
+<li><b>Revogar:</b> use o botão <b>Sair</b> do painel (ele revoga o token) ou remova o acesso em <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>. Apagar os dados do navegador também remove tudo o que existe de você neste aplicativo. Isso não apaga cópias que o YouTube mantenha.</li>
+<li><b>Uso limitado:</b> o uso e a transferência, para qualquer outro aplicativo, de informações recebidas das APIs do Google seguirão a <a href="https://developers.google.com/terms/api-services-user-data-policy">Política de Dados do Usuário dos Serviços de API do Google</a>, incluindo os requisitos de Uso Limitado. Não vendemos nem transferimos esses dados a terceiros, não os usamos para publicidade e nenhuma pessoa lê o conteúdo recebido.</li>
+</ul>
+<p class="su"><i>English:</i> TeuzinBetterChat's use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. The app uses YouTube API Services; you can revoke access at <a href="https://security.google.com/settings/security/permissions">Google security settings</a>.</p>
+
+<h2>7. Por quanto tempo guardamos</h2>
+<ul>
+<li><b>No seu navegador:</b> até você clicar em <b>Sair</b>, limpar os dados do site ou os tokens expirarem. O login da Twitch pelo configurador dura cerca de 3 a 4 horas. Em aplicativos do Google em modo de teste, o token de renovação expira em 7 dias.</li>
+<li><b>Nos nossos servidores:</b> não mantemos dados seus. O que passa pelo worker e pelo relay é descartado depois do processamento.</li>
+<li><b>Nos provedores:</b> registros de acesso ficam pelo tempo definido por cada um (GitHub, Cloudflare, Render).</li>
+</ul>
+
+<h2>8. Seus direitos e como exercê-los</h2>
+<p>Pela LGPD (art. 18) você pode pedir confirmação do tratamento, acesso, correção, eliminação, informação sobre compartilhamento e revogação do consentimento. Como não temos cadastro nem armazenamos dados seus, o caminho mais direto é você mesmo:</p>
+<ul>
+<li>clicar em <b>Sair</b> em cada plataforma no painel (revoga o login) e limpar os dados do site no navegador;</li>
+<li><b>Twitch:</b> <a href="https://www.twitch.tv/settings/connections">twitch.tv/settings/connections</a> → desconectar o aplicativo;</li>
+<li><b>Kick:</b> nas configurações da sua conta, remova o aplicativo autorizado;</li>
+<li><b>Google:</b> <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</li>
+</ul>
+<p>Se mesmo assim quiser falar sobre seus dados, fale com a gente (item 12). Você também pode reclamar à <a href="https://www.gov.br/anpd/">Autoridade Nacional de Proteção de Dados (ANPD)</a>.</p>
+
+<h2>9. Segurança</h2>
+<p>Os segredos dos aplicativos (Client Secret de Kick e Google) ficam só no worker, nunca no código público. A comunicação usa HTTPS/WSS. O worker só atende pedidos vindos do site autorizado e o relay restringe o acesso de navegadores a ele. Mesmo assim, <b>cuide do seu lado</b>:</p>
+<ul>
+<li>o token vale como <b>senha</b>; não use o painel em computador compartilhado sem clicar em Sair depois;</li>
+<li>só marque "colocar o login no link" se precisar, e <b>nunca mostre esse link na live</b>: quem o vir poderá agir como você no chat;</li>
+<li>a chave da API do YouTube colocada no link também é sua responsabilidade; use uma chave restrita;</li>
+<li>se achar que um token vazou, clique em Sair e revogue o acesso na plataforma (item 8).</li>
+</ul>
+
+<h2>10. Transferência internacional</h2>
+<p>Provedores como GitHub, Cloudflare, Render, Google, Twitch, Kick e TikTok operam em servidores fora do Brasil. Ao usar o aplicativo, informações técnicas e as requisições descritas acima podem ser processadas no exterior, conforme as políticas desses provedores e o art. 33 da LGPD.</p>
+
+<h2>11. Crianças e adolescentes</h2>
+<p>O aplicativo é uma ferramenta para quem faz transmissões e segue a idade mínima de cada plataforma (em geral 13 anos ou mais, conforme os termos de cada uma; menores de 18 devem ter autorização de um responsável quando exigido). Não direcionamos o serviço a crianças e não coletamos dados de menores de forma deliberada.</p>
+
+<h2>12. Contato</h2>
+<p>Dúvidas, pedidos ou avisos sobre privacidade: fale com o Matheus (teuzin0dev) pelo <a href="https://discord.gg/UPSSNs3xTZ">Discord</a> ou pelo <a href="https://github.com/dieguesmosken/TeuzinBetterChat/issues">GitHub (Issues)</a>. Para assuntos sensíveis, peça um canal privado antes de enviar dados pessoais.</p>
+
+<h2>13. Mudanças nesta política</h2>
+<p>Se o aplicativo passar a tratar dados de outra forma, esta página será atualizada com nova data, e pediremos novo consentimento quando a lei exigir. O histórico fica no <a href="https://github.com/dieguesmosken/TeuzinBetterChat">repositório do projeto</a>.</p>
+
+<footer>TeuzinBetterChat não é afiliado nem endossado por Twitch, Kick, Google/YouTube ou TikTok. · <a href="termos.html">Termos de uso</a></footer>
+</main></body></html>
