@@ -3,12 +3,15 @@
 //
 // Segredos (NUNCA no codigo; configure com `wrangler secret put`):
 //   KICK_CLIENT_ID, KICK_CLIENT_SECRET
+//   YT_CLIENT_ID, YT_CLIENT_SECRET   (app do Google/YouTube; rotas /yt/*)
 // Variavel (wrangler.toml):
 //   ALLOWED_ORIGIN = "https://www.teuzin.com.br"   (so esta origem pode usar o worker)
 
 const TOKEN_URL = 'https://id.kick.com/oauth/token';
 const REVOKE_URL = 'https://id.kick.com/oauth/revoke';
 const API = 'https://api.kick.com/public/v1/';
+const GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token';
+const GOOGLE_REVOKE = 'https://oauth2.googleapis.com/revoke';
 
 // so estas rotas da API podem ser repassadas (metodo + caminho)
 const ROTAS = [
@@ -62,6 +65,28 @@ export default {
         const b = await req.json();
         if (!b.token) return json({ erro: 'falta token' }, 400, c.h);
         const r = await fetch(REVOKE_URL + '?token=' + encodeURIComponent(b.token) + '&token_hint_type=' + encodeURIComponent(b.hint || 'access_token'), { method: 'POST' });
+        return json({ ok: r.ok }, r.ok ? 200 : 502, c.h);
+      }
+      // ---- YouTube / Google (so a troca de token precisa do segredo; a API do YouTube e chamada direto do navegador) ----
+      if (req.method === 'POST' && url.pathname === '/yt/token') {
+        const b = await req.json();
+        if (!b.code || !b.redirect_uri) return json({ erro: 'faltam campos' }, 400, c.h);
+        const corpo = { grant_type: 'authorization_code', client_id: env.YT_CLIENT_ID, client_secret: env.YT_CLIENT_SECRET, redirect_uri: b.redirect_uri, code: b.code };
+        if (b.code_verifier) corpo.code_verifier = b.code_verifier;
+        const r = await fetch(GOOGLE_TOKEN, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(corpo) });
+        return new Response(await r.text(), { status: r.status, headers: { 'Content-Type': 'application/json', ...c.h } });
+      }
+      if (req.method === 'POST' && url.pathname === '/yt/refresh') {
+        const b = await req.json();
+        if (!b.refresh_token) return json({ erro: 'falta refresh_token' }, 400, c.h);
+        const r = await fetch(GOOGLE_TOKEN, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ grant_type: 'refresh_token', client_id: env.YT_CLIENT_ID, client_secret: env.YT_CLIENT_SECRET, refresh_token: b.refresh_token }) });
+        return new Response(await r.text(), { status: r.status, headers: { 'Content-Type': 'application/json', ...c.h } });
+      }
+      if (req.method === 'POST' && url.pathname === '/yt/revoke') {
+        const b = await req.json();
+        if (!b.token) return json({ erro: 'falta token' }, 400, c.h);
+        const r = await fetch(GOOGLE_REVOKE, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ token: b.token }) });
         return json({ ok: r.ok }, r.ok ? 200 : 502, c.h);
       }
       if (url.pathname.startsWith('/api/')) {
