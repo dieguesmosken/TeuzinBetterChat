@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Teyo • Clip do !so</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root{--lilas:#A970FF;--roxo:#6B3FD4;--grafite:#1b1b22;--azul:#3FA9F5}
+  html,body{margin:0;height:100%;background:transparent;overflow:hidden;font-family:"Segoe UI",system-ui,sans-serif}
+  #cartao{position:fixed;left:50%;bottom:6%;width:min(62vw,1100px);aspect-ratio:16/9;transform:translateX(-50%) scale(.92);opacity:0;
+    transition:opacity .45s,transform .45s;border-radius:18px;overflow:hidden;background:#000;border:3px solid var(--lilas);
+    box-shadow:0 0 0 3px var(--grafite),0 12px 40px rgba(107,63,212,.55)}
+  #cartao.on{opacity:1;transform:translateX(-50%) scale(1)}
+  video,iframe{width:100%;height:100%;border:0;object-fit:cover;background:#000;display:block}
+  #nome{position:absolute;left:0;right:0;bottom:0;padding:14px 20px;color:#fff;font-weight:800;font-size:clamp(18px,2.4vw,34px);
+    background:linear-gradient(transparent,rgba(27,27,34,.92));text-shadow:0 2px 6px #000}
+  #nome small{display:block;font-weight:600;font-size:.55em;color:#cdb6ff}
+  /* painel de entrada (aparece só quando falta o token; use "Interagir" no OBS) */
+  #login{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#1b1b22;color:#fff;text-align:center;padding:24px}
+  #login button{background:var(--lilas);border:0;color:#fff;font-weight:700;font-size:18px;padding:12px 22px;border-radius:10px;cursor:pointer}
+  #login p{max-width:520px;line-height:1.5;color:#cfc8e6}
+  #status{position:fixed;left:8px;top:8px;font-size:12px;color:#cfc8e6;background:rgba(27,27,34,.8);padding:4px 8px;border-radius:6px;display:none}
+</style>
+</head>
+<body>
+<div id="cartao"><div id="media"></div><div id="nome"></div></div>
+<div id="login">
+  <div>
+    <h2>🐺 Clip do !so</h2>
+    <p>Falta autorizar o Twitch uma vez. No OBS: clique com o botão direito nesta fonte → <b>Interagir</b> → entre com a sua conta. O token fica salvo só neste navegador do OBS e serve apenas para buscar clips (nenhuma permissão de escrita).</p>
+    <button id="entrar">Entrar com a Twitch</button>
+  </div>
+</div>
+<div id="status"></div>
+<script>
+/* Parâmetros na URL: ?canal=teuzin0dev&max=20&teste=login&cid=SEU_CLIENT_ID&nivel=mod|vip|todos */
+const Q = new URLSearchParams(location.search);
+const CANAL = (Q.get('canal') || 'teuzin0dev').toLowerCase();
+const CID = Q.get('cid') || 'bnqg3ttxcusgbv0z6dzgmjnln64gn9';
+const MAXS = Math.max(5, Math.min(60, +Q.get('max') || 20));      // duração máxima na tela (s)
+const NIVEL = Q.get('nivel') || 'mod';                             // quem pode usar o !so
+const CMD = (Q.get('cmd') || '!so').toLowerCase();
+const KTOK = 'teyo-soclip-token';
+const REDIR = location.origin + location.pathname;
+
+const $ = id => document.getElementById(id);
+const st = t => { const e = $('status'); e.textContent = t; e.style.display = Q.has('debug') ? 'block' : 'none'; };
+const ler = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+const gravar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+
+/* ---- login (implicit flow, sem escopos) ---- */
+function entrar() {
+  const state = crypto.getRandomValues(new Uint32Array(4)).join('');
+  gravar('teyo-soclip-state', state);
+  location.href = 'https://id.twitch.tv/oauth2/authorize?' + new URLSearchParams({ client_id: CID, redirect_uri: REDIR, response_type: 'token', scope: '', state });
+}
+$('entrar').onclick = entrar;
+(function voltou() {
+  if (!location.hash.includes('access_token')) return;
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get('state') === ler('teyo-soclip-state')) gravar(KTOK, { t: h.get('access_token'), em: Date.now() + (+h.get('expires_in') || 0) * 1000 });
+  history.replaceState(null, '', location.pathname + location.search);
+})();
+function token() { const k = ler(KTOK); return k && k.t && k.em > Date.now() + 60000 ? k.t : null; }
+
+async function helix(path) {
+  const r = await fetch('https://api.twitch.tv/helix/' + path, { headers: { 'Client-Id': CID, Authorization: 'Bearer ' + token() } });
+  if (r.status === 401) { localStorage.removeItem(KTOK); $('login').style.display = 'flex'; throw new Error('token expirou'); }
+  if (!r.ok) throw new Error('helix ' + r.status);
+  return r.json();
+}
+
+/* ---- clips ---- */
+async function clipAleatorio(login) {
+  const u = (await helix('users?login=' + encodeURIComponent(login))).data[0];
+  if (!u) return null;
+  const c = (await helix('clips?broadcaster_id=' + u.id + '&first=100')).data;
+  if (!c.length) return { u, clip: null };
+  const curtos = c.filter(x => x.duration <= MAXS + 5);
+  const lista = curtos.length ? curtos : c;
+  return { u, clip: lista[Math.floor(Math.random() * lista.length)] };
+}
+function mp4De(clip) {
+  const t = clip.thumbnail_url || '';
+  return /-preview-\d+x\d+\.jpg$/.test(t) ? t.replace(/-preview-\d+x\d+\.jpg$/, '.mp4') : null;
+}
+
+/* ---- tela ---- */
+let fila = [], tocando = false, timer = null;
+function fechar(fim) {
+  clearTimeout(timer);
+  $('cartao').classList.remove('on');
+  setTimeout(() => { $('media').innerHTML = ''; tocando = false; fim && proximo(); }, 500);
+}
+function proximo() { if (tocando || !fila.length) return; tocando = true; tocar(fila.shift()); }
+async function tocar(login) {
+  try {
+    const r = await clipAleatorio(login);
+    if (!r || !r.clip) { tocando = false; st('sem clips: ' + login); return proximo(); }
+    const { u, clip } = r;
+    $('nome').innerHTML = '💜 ' + u.display_name.replace(/[<>&]/g, '') + '<small>' + clip.title.replace(/[<>&]/g, '') + '</small>';
+    const m = $('media'); m.innerHTML = '';
+    const usarEmbed = () => {
+      m.innerHTML = '';
+      const f = document.createElement('iframe');
+      f.allow = 'autoplay'; f.src = 'https://clips.twitch.tv/embed?clip=' + encodeURIComponent(clip.id) + '&parent=' + location.hostname + '&autoplay=true&muted=false';
+      m.appendChild(f);
+    };
+    const mp4 = mp4De(clip);
+    if (mp4) {
+      const v = document.createElement('video');
+      v.src = mp4; v.autoplay = true; v.playsInline = true;
+      v.onended = () => fechar(true);
+      v.onerror = usarEmbed;
+      m.appendChild(v);
+      v.play().catch(usarEmbed);
+    } else usarEmbed();
+    $('cartao').classList.add('on');
+    timer = setTimeout(() => fechar(true), Math.min(MAXS, Math.ceil(clip.duration) + 1) * 1000);
+  } catch (e) { st(String(e)); tocando = false; setTimeout(proximo, 1000); }
+}
+function pedir(login) {
+  login = login.replace(/^@/, '').toLowerCase().replace(/[^a-z0-9_]/g, '');
+  if (!login || fila.includes(login)) return;
+  fila.push(login); proximo();
+}
+
+/* ---- chat (IRC anônimo, só leitura) ---- */
+function ouvir() {
+  const ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+  ws.onopen = () => {
+    ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+    ws.send('PASS SCHMOOPIIE'); ws.send('NICK justinfan' + Math.floor(Math.random() * 90000 + 10000));
+    ws.send('JOIN #' + CANAL);
+  };
+  ws.onmessage = ev => ev.data.split('\r\n').filter(Boolean).forEach(l => {
+    if (l.startsWith('PING')) return ws.send('PONG :tmi.twitch.tv');
+    const m = l.match(/^@(\S+) :[^ ]+ PRIVMSG #\S+ :(.*)$/);
+    if (!m) return;
+    const tags = Object.fromEntries(m[1].split(';').map(p => p.split('=')));
+    const badges = tags.badges || '';
+    const ok = /broadcaster|moderator/.test(badges) || (NIVEL !== 'mod' && /vip/.test(badges)) || NIVEL === 'todos';
+    const [cmd, alvo] = m[2].trim().split(/\s+/);
+    if (ok && cmd.toLowerCase() === CMD && alvo) pedir(alvo);
+  });
+  ws.onclose = () => setTimeout(ouvir, 3000);
+}
+
+if (!token()) $('login').style.display = 'flex';
+ouvir();
+if (Q.get('teste')) setTimeout(() => token() ? pedir(Q.get('teste')) : st('sem token'), 1500);
+</script>
+</body>
+</html>
