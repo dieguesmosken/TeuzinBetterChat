@@ -1,0 +1,7 @@
+name = "meu-so-clip"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+[vars]
+# Site onde o so-clip.html roda. Padrao do projeto; mude se voce hospedar o overlay em outro lugar.
+ALLOWED_ORIGIN = "https://www.teuzin.com.br"
