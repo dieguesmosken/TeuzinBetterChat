@@ -24,12 +24,12 @@ Data: 30/10/2026. Levantamento técnico feito sobre o código (não substitui re
 | 9 | Dados de terceiros no chat (apelidos, mensagens) | Baixa | Só exibidos, não gravados; responsabilidade do streamer descrita |
 | 10 | Menores | Baixa | Cláusula de idade mínima; sem coleta deliberada |
 | 11 | App Google em modo "Teste": tokens expiram em 7 dias e só testadores entram | Operacional | Para uso geral, publicar o app (verificação do Google exige a política publicada) |
-| 12 | Contato para titular de dados: apenas Discord/GitHub | Baixa | Sugestão: criar e-mail dedicado (ex.: privacidade@teuzin.com.br) e trocar nas páginas |
+| 12 | Contato para titular de dados | Baixa | **Corrigido**: suporte@teuzin.com.br nas páginas (a caixa precisa existir e ser monitorada) |
 | 13 | Licenças e marcas: nomes/logos de plataformas, emotes de terceiros | Baixa | Aviso de não afiliação nas páginas |
 
 ## Pendências recomendadas
 1. Publicar as páginas na `main` e informar as URLs na tela de consentimento OAuth do Google (política, termos, página inicial).
-2. E-mail de contato público dedicado.
+2. Garantir que suporte@teuzin.com.br receba e-mails (ex.: encaminhamento do Cloudflare Email Routing).
 3. Revisão por advogado antes de distribuição ampla ou qualquer monetização.
 4. CSP nas páginas e fonte hospedada localmente (endurecimento).
 5. Ler os termos de desenvolvedor da Twitch e da Kick antes de divulgar o app a outros streamers (cada streamer pode usar o próprio Client ID).
