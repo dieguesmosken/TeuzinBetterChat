@@ -13,7 +13,11 @@
   body{margin:0;color:var(--texto);font-family:"Poppins","Segoe UI",system-ui,sans-serif;
     background:radial-gradient(900px 500px at 15% 0%,#2a1060 0,transparent 60%),
                radial-gradient(800px 500px at 100% 100%,#1d0b45 0,transparent 55%),#05030d}
-  .quadro{display:grid;gap:18px;padding:22px;min-height:100vh;
+  .abas{display:flex;gap:10px;padding:18px 22px 0;flex-wrap:wrap}
+  .abas a{padding:9px 22px;border-radius:16px;border:2px solid var(--lilas);color:var(--lilas);text-decoration:none;font-weight:700;font-size:14px;background:rgba(10,6,24,.7)}
+  .abas a:hover{filter:brightness(1.2)}
+  .abas a.on{background:linear-gradient(135deg,var(--roxo),var(--lilas));color:#fff;border-color:transparent;box-shadow:0 4px 16px rgba(123,44,242,.4)}
+  .quadro{display:grid;gap:18px;padding:18px 22px 22px;min-height:calc(100vh - 62px);
     grid-template-columns:minmax(0,1fr) 400px;grid-template-rows:minmax(0,1fr) auto;
     grid-template-areas:"previa lateral" "barra lateral"}
   @media(max-width:1000px){.quadro{grid-template-columns:1fr;grid-template-rows:auto;
@@ -72,6 +76,10 @@
 </style>
 </head>
 <body>
+<nav class="abas">
+  <a href="config-chat.html" class="on">💬 Chat</a>
+  <a href="so-clip-config.html">🎬 Clip do !so</a>
+</nav>
 <div class="quadro">
 
   <section class="previa moldura">
