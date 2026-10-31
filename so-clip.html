@@ -45,6 +45,7 @@ const CMD = (Q.get('cmd') || '!so').toLowerCase();
 document.documentElement.style.setProperty('--tam', Math.max(20, Math.min(100, +Q.get('tam') || 48)));
 { const pos = Q.get('pos') || 'centro', R = document.documentElement.style;
   if (pos === 'esq') { R.setProperty('--x', '2%'); R.setProperty('--tx', '0'); } else if (pos === 'dir') { R.setProperty('--x', '98%'); R.setProperty('--tx', '-100%'); } }
+const WORKER = (Q.get('worker') || '').replace(/\/+$/, '');
 const KTOK = 'teyo-soclip-token';
 const REDIR = location.origin + location.pathname;
 
@@ -93,7 +94,7 @@ async function clipAleatorio(login) {
   const c = (await helix('clips?broadcaster_id=' + u.id + '&first=100')).data;
   if (!c.length) return { u, clip: null };
   // prefere clips com mp4 direto (sem player do Twitch, sem aviso de conteúdo maduro e com som garantido)
-  const diretos = c.filter(x => mp4De(x));
+  const diretos = WORKER ? c : c.filter(x => mp4De(x));
   const base = diretos.length ? diretos : c;
   const curtos = base.filter(x => x.duration <= MAXS + 5);
   const lista = curtos.length ? curtos : base;
@@ -130,7 +131,8 @@ async function tocar(login) {
       f.onload = () => armar(4);
       m.appendChild(f);
     };
-    const mp4 = mp4De(clip);
+    let mp4 = mp4De(clip);
+    if (WORKER) { try { const w = await (await fetch(WORKER + '/clip/' + encodeURIComponent(clip.id))).json(); if (w.url) mp4 = w.url; } catch {} }
     if (mp4) {
       const v = document.createElement('video');
       v.src = mp4; v.autoplay = true; v.playsInline = true; v.muted = false; v.volume = 1;

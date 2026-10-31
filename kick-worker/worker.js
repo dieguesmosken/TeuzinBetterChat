@@ -12,6 +12,11 @@ const REVOKE_URL = 'https://id.kick.com/oauth/revoke';
 const API = 'https://api.kick.com/public/v1/';
 const GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token';
 const GOOGLE_REVOKE = 'https://oauth2.googleapis.com/revoke';
+// Clips do Twitch: o link de video direto nao existe na API oficial (Helix). Esta rota usa o mesmo
+// endpoint interno que o site do Twitch usa para tocar clips. NAO e API oficial: pode mudar ou quebrar sem aviso.
+const TW_GQL = 'https://gql.twitch.tv/gql';
+const TW_WEB_CID = 'kimne78kx3ncx6brgo4mv6wki5h1ko';
+const TW_CLIP_HASH = '36b89d2507fce29e5ca551df756d27c1cfe079e2609642b4390aa4c35796eb11';
 
 // so estas rotas da API podem ser repassadas (metodo + caminho)
 const ROTAS = [
@@ -88,6 +93,22 @@ export default {
         if (!b.token) return json({ erro: 'falta token' }, 400, c.h);
         const r = await fetch(GOOGLE_REVOKE, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ token: b.token }) });
         return json({ ok: r.ok }, r.ok ? 200 : 502, c.h);
+      }
+      // ---- Twitch: URL de video direto de um clip (usada so pelo overlay so-clip.html) ----
+      if (req.method === 'GET' && url.pathname.startsWith('/clip/')) {
+        const slug = url.pathname.slice(6);
+        if (!/^[A-Za-z0-9_-]{5,120}$/.test(slug)) return json({ erro: 'slug invalido' }, 400, c.h);
+        const r = await fetch(TW_GQL, { method: 'POST', headers: { 'Client-Id': TW_WEB_CID, 'Content-Type': 'application/json' },
+          body: JSON.stringify([{ operationName: 'VideoAccessToken_Clip', variables: { platform: 'web', slug },
+            extensions: { persistedQuery: { version: 1, sha256Hash: TW_CLIP_HASH } } }]) });
+        if (!r.ok) return json({ erro: 'twitch ' + r.status }, 502, c.h);
+        const d = (await r.json())[0]?.data?.clip;
+        const tok = d?.playbackAccessToken;
+        const qs = (d?.videoQualities || []).slice().sort((a, b) => (+b.quality || 0) - (+a.quality || 0));
+        const q = qs.find(x => +x.quality <= 1080) || qs[0];
+        if (!tok || !q) return json({ erro: 'clip sem video' }, 404, c.h);
+        return new Response(JSON.stringify({ url: q.sourceURL + '?sig=' + tok.signature + '&token=' + encodeURIComponent(tok.value), quality: q.quality }),
+          { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...c.h } });
       }
       if (url.pathname.startsWith('/api/')) {
         const caminho = url.pathname.slice(5);
