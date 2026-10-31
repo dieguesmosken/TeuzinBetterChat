@@ -41,8 +41,8 @@ const Q = new URLSearchParams(location.search);
 /* ?k=ID (link curto): busca o código no worker e recarrega com ?s=... */
 if (Q.has('k')) { const W = (Q.get('worker') || 'https://betterchat.teuzin0dev.workers.dev').replace(/\/+$/, '');
   fetch(W + '/cfg/' + encodeURIComponent(Q.get('k'))).then(r => r.json()).then(d => {
-    if (!d.s) throw 0; const u = new URLSearchParams(location.search); u.delete('k'); u.set('s', d.s);
-    location.replace(location.pathname + '?' + u.toString().replace(/%2C/g, ',')); })
+    if (!d.s || !/^[A-Za-z0-9_,.%-]+$/.test(d.s)) throw 0; const u = new URLSearchParams(location.search); u.delete('k'); u.delete('s'); const rest = u.toString();
+    location.replace(location.pathname + '?s=' + d.s + (rest ? '&' + rest : '')); })   /* d.s já vem codificado: não passar por URLSearchParams (dobraria o %) */
     .catch(() => { document.body.insertAdjacentHTML('beforeend', '<div style="font:14px sans-serif;color:#fff;background:#c33;padding:8px">Link curto inválido ou worker sem KV.</div>'); });
   throw new Error('redirecionando pelo link curto'); }
 /* ?s=canal,cor,borda,raio,vol,max,nivel,nome,titulo,cmd — todas as opções num código só (vazio = padrão) */
