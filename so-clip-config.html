@@ -154,7 +154,7 @@
 const $ = id => document.getElementById(id);
 const KCFG = 'teyo-soclip-cfg', KTOK = 'teyo-soclip-token';
 const BASE = location.origin + location.pathname.replace(/[^/]*$/, '') + 'so-clip.html';
-const WORKER_PADRAO = 'https://teuzinbetterchat-kick.teuzin0dev.workers.dev';
+const WORKER_PADRAO = 'https://betterchat.teuzin0dev.workers.dev';
 const PRESETS = ['#A970FF', '#FF5C8A', '#3FA9F5', '#5AD19A', '#FFB84D', '#FFFFFF'];
 const ler = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
 const gravar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
@@ -162,6 +162,9 @@ const gravar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } c
 const campos = { canal: '', cmd: '!so', nivel: 'mod', cor: '#a970ff', borda: 3, raio: 18, nome: true, titulo: true, vol: 100, max: 20, emojiOn: true, emoji: '💜', cn: '#ffffff', ct: '#cdb6ff', worker: WORKER_PADRAO, tcanal: '' };
 const cfg = Object.assign({}, campos, ler(KCFG) || {});
 if (!cfg.worker) cfg.worker = WORKER_PADRAO;
+if (/teuzinbetterchat-kick\.teuzin0dev\.workers\.dev/.test(cfg.worker)) cfg.worker = WORKER_PADRAO;   // endereço antigo salvo no navegador
+function sanear() { cfg.max = Math.min(60, Math.max(5, +cfg.max || 20)); cfg.vol = Math.min(100, Math.max(0, isNaN(+cfg.vol) ? 100 : +cfg.vol)); if (!['mod', 'vip', 'todos'].includes(cfg.nivel)) cfg.nivel = 'mod'; if (!cfg.cmd) cfg.cmd = '!so'; }
+sanear();
 // a URL do configurador também aceita ?canal=...&cor=...
 { const q = new URLSearchParams(location.search);
   if (q.get('s')) q.get('s').split(',').forEach((v, i) => { const k = ['canal','cor','borda','raio','vol','max','nivel','nome','titulo','cmd','emoji','cn','ct'][i]; if (!v || !k) return;
@@ -176,6 +179,7 @@ function aplicarNaTela() {
 }
 function lerDaTela() {
   for (const k of Object.keys(campos)) { const e = $(k); if (!e) continue; cfg[k] = e.type === 'checkbox' ? e.checked : (e.type === 'range' || e.type === 'number' ? +e.value : e.value.trim()); }
+  sanear();
 }
 const CAMPOS_S = ['canal','cor','borda','raio','vol','max','nivel','nome','titulo','cmd','emoji','cn','ct'];
 function codigo() {   // todas as opções num texto curto; vazio = padrão

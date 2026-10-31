@@ -39,7 +39,7 @@
 if (location.hostname === 'teuzin.com.br') location.replace('https://www.teuzin.com.br' + location.pathname + location.search + location.hash);
 const Q = new URLSearchParams(location.search);
 /* ?k=ID (link curto): busca o código no worker e recarrega com ?s=... */
-if (Q.has('k')) { const W = (Q.get('worker') || 'https://teuzinbetterchat-kick.teuzin0dev.workers.dev').replace(/\/+$/, '');
+if (Q.has('k')) { const W = (Q.get('worker') || 'https://betterchat.teuzin0dev.workers.dev').replace(/\/+$/, '');
   fetch(W + '/cfg/' + encodeURIComponent(Q.get('k'))).then(r => r.json()).then(d => {
     if (!d.s) throw 0; const u = new URLSearchParams(location.search); u.delete('k'); u.set('s', d.s);
     location.replace(location.pathname + '?' + u.toString().replace(/%2C/g, ',')); })
@@ -70,7 +70,7 @@ else { const pos = Q.get('pos') || 'centro', R = document.documentElement.style;
   if (Q.get('nome') === '0') R.setProperty('--nome', 'none');
   if (Q.get('titulo') === '0') R.setProperty('--titulo', 'none'); }
 const VOL = Math.max(0, Math.min(100, +(Q.get('vol') ?? 100))) / 100;
-const WORKER = (Q.get('worker') || 'https://teuzinbetterchat-kick.teuzin0dev.workers.dev').replace(/\/+$/, '');
+const WORKER = (Q.get('worker') || 'https://betterchat.teuzin0dev.workers.dev').replace(/\/+$/, '');
 const KTOK = 'teyo-soclip-token';
 const REDIR = location.origin + location.pathname;
 

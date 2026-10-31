@@ -16,7 +16,7 @@ Este pequeno worker (Cloudflare, plano grátis) guarda o segredo e faz a troca. 
    npx wrangler deploy
    ```
    Cole o Client ID e o Client Secret quando o `wrangler` pedir. **Nunca** coloque o segredo em arquivo, no GitHub ou numa conversa.
-4. O `deploy` mostra o endereço do worker (`https://teuzinbetterchat-kick.SEU-USUARIO.workers.dev`). Cole esse endereço e o Client ID no `painel.html`.
+4. O `deploy` mostra o endereço do worker (`https://betterchat.SEU-USUARIO.workers.dev`). Cole esse endereço e o Client ID no `painel.html`.
 
 ## Segurança
 - O segredo fica só nos "secrets" do Cloudflare.
