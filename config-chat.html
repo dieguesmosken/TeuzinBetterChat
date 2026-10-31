@@ -52,7 +52,7 @@
   /* barra inferior, como o rodapé do overlay */
   .barra{grid-area:barra;display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:14px 22px;
     background:var(--painel);border:2px solid var(--lilas);border-radius:24px}
-  .avatar{width:74px;height:74px;border-radius:50%;border:4px solid var(--lilas);background:#2a1457 center/cover;flex:none}
+  .avatar{width:74px;height:74px;border-radius:50%;border:4px solid var(--lilas);background:#2a1457 url(assets/icon-chat.svg) center/cover;flex:none}
   .nome{min-width:190px}
   .nome h1{margin:0;font-size:26px;font-weight:800;line-height:1.1}
   .nome h1 span{color:var(--lilas)}
@@ -223,8 +223,6 @@
   document.querySelectorAll('input').forEach(el => el.addEventListener('input', () => { atualizar(); salvar(); }));
   $('copiar').addEventListener('click', copiar);
   $('reset').addEventListener('click', () => { padrao(); salvar(); });
-  // avatar do Teyo (mesma pasta de assets dos overlays), se existir
-  try { const im = new Image(); const u = base().replace(/[^\/]*$/, '') + 'assets/teyo_avatar.png'; im.onload = () => { $('av').style.backgroundImage = 'url(' + u + ')'; }; im.src = u; } catch (e) {}
   carregar(); atualizar();
 })();
 </script>

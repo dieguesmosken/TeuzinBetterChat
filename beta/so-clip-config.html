@@ -54,7 +54,7 @@
   .chk em{display:block;color:var(--suave);font-style:normal;font-weight:500;font-size:12px}
   .barra{grid-area:barra;display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:14px 22px;
     background:var(--painel);border:2px solid var(--lilas);border-radius:24px}
-  .avatar{width:74px;height:74px;border-radius:50%;border:4px solid var(--lilas);background:#2a1457 center/cover;flex:none}
+  .avatar{width:74px;height:74px;border-radius:50%;border:4px solid var(--lilas);background:#2a1457 url(assets/icon-clip.svg) center/cover;flex:none}
   .nome{min-width:190px}
   .nome h1{margin:0;font-size:26px;font-weight:800;line-height:1.1}
   .nome h1 span{color:var(--lilas)}
@@ -311,7 +311,6 @@ function estado() {
   $('entrar').style.display = ok ? 'none' : '';   // conectado: só "Sair"; desconectado: só "Entrar"
   $('sair').style.display = ok ? '' : 'none';
 }
-try { const im = new Image(), u = BASE.replace(/[^\/]*$/, '') + 'assets/teyo_avatar.png'; im.onload = () => { $('av').style.backgroundImage = 'url(' + u + ')'; }; im.src = u; } catch {}
 aplicarNaTela(); atualizar(); estado();
 /* conectado: descobre o nome do canal da conta e preenche o campo (se estiver vazio) */
 async function preencherCanal() {
