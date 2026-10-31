@@ -156,6 +156,8 @@ const cfg = Object.assign({}, campos, ler(KCFG) || {});
 if (!cfg.worker) cfg.worker = WORKER_PADRAO;
 // a URL do configurador também aceita ?canal=...&cor=...
 { const q = new URLSearchParams(location.search);
+  if (q.get('s')) q.get('s').split(',').forEach((v, i) => { const k = ['canal','cor','borda','raio','vol','max','nivel','nome','titulo','cmd'][i]; if (!v || !k) return;
+    if (k === 'cor') cfg.cor = '#' + v.replace('#', ''); else if (k === 'nome' || k === 'titulo') cfg[k] = v !== '0'; else cfg[k] = k === 'cmd' ? decodeURIComponent(v) : v; });
   for (const k of ['canal', 'cmd', 'nivel', 'borda', 'raio', 'vol', 'max', 'worker']) if (q.has(k)) cfg[k] = q.get(k);
   if (q.has('cor')) cfg.cor = '#' + q.get('cor').replace('#', '');
   if (q.get('nome') === '0') cfg.nome = false; if (q.get('titulo') === '0') cfg.titulo = false; }
@@ -167,22 +169,23 @@ function aplicarNaTela() {
 function lerDaTela() {
   for (const k of Object.keys(campos)) { const e = $(k); if (!e) continue; cfg[k] = e.type === 'checkbox' ? e.checked : (e.type === 'range' || e.type === 'number' ? +e.value : e.value.trim()); }
 }
-function montarUrl(extra) {
-  const p = new URLSearchParams();
+const CAMPOS_S = ['canal','cor','borda','raio','vol','max','nivel','nome','titulo','cmd'];
+function codigo() {   // todas as opções num texto curto; vazio = padrão
   const canal = cfg.canal.replace(/^@|^https?:\/\/(www\.)?twitch\.tv\//i, '').toLowerCase().replace(/[^a-z0-9_]/g, '');
-  if (canal) p.set('canal', canal);
-  if (cfg.cmd && cfg.cmd.toLowerCase() !== '!so') p.set('cmd', cfg.cmd.toLowerCase());
-  if (cfg.nivel !== 'mod') p.set('nivel', cfg.nivel);
-  if (cfg.cor.toLowerCase() !== '#a970ff') p.set('cor', cfg.cor.replace('#', '').toUpperCase());
-  if (+cfg.borda !== 3) p.set('borda', cfg.borda);
-  if (+cfg.raio !== 18) p.set('raio', cfg.raio);
-  if (!cfg.nome) p.set('nome', '0');
-  if (!cfg.titulo) p.set('titulo', '0');
-  if (+cfg.vol !== 100) p.set('vol', cfg.vol);
-  if (+cfg.max !== 20) p.set('max', cfg.max);
+  const v = {
+    canal, cor: cfg.cor.toLowerCase() !== '#a970ff' ? cfg.cor.replace('#', '').toUpperCase() : '',
+    borda: +cfg.borda !== 3 ? cfg.borda : '', raio: +cfg.raio !== 18 ? cfg.raio : '', vol: +cfg.vol !== 100 ? cfg.vol : '', max: +cfg.max !== 20 ? cfg.max : '',
+    nivel: cfg.nivel !== 'mod' ? cfg.nivel : '', nome: cfg.nome ? '' : '0', titulo: cfg.titulo ? '' : '0',
+    cmd: cfg.cmd && cfg.cmd.toLowerCase() !== '!so' ? encodeURIComponent(cfg.cmd.toLowerCase()) : ''
+  };
+  return CAMPOS_S.map(k => v[k]).join(',').replace(/,+$/, '');
+}
+function montarUrl(extra) {
+  const c = codigo(), p = new URLSearchParams();
   if (cfg.worker && cfg.worker.replace(/\/+$/, '') !== WORKER_PADRAO) p.set('worker', cfg.worker.replace(/\/+$/, ''));
   if (extra) for (const [k, v] of Object.entries(extra)) p.set(k, v);
-  return BASE + '?' + p.toString().replace(/%3A/g, ':').replace(/%2F/g, '/');
+  const rest = p.toString().replace(/%3A/g, ':').replace(/%2F/g, '/');
+  return BASE + '?s=' + c.replace(/%/g, '%25').replace(/%25([0-9A-F]{2})/g, '%$1') + (rest ? '&' + rest : '');
 }
 function atualizar() {
   lerDaTela(); gravar(KCFG, cfg);

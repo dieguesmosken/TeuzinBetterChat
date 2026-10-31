@@ -38,6 +38,9 @@
 /* o redirect do Twitch está cadastrado com www; no domínio sem www o login se perde */
 if (location.hostname === 'teuzin.com.br') location.replace('https://www.teuzin.com.br' + location.pathname + location.search + location.hash);
 const Q = new URLSearchParams(location.search);
+/* ?s=canal,cor,borda,raio,vol,max,nivel,nome,titulo,cmd — todas as opções num código só (vazio = padrão) */
+{ const F = ['canal','cor','borda','raio','vol','max','nivel','nome','titulo','cmd'], c = Q.get('s');
+  if (c) c.split(',').forEach((v, i) => { v = v.trim(); if (v && F[i] && !Q.has(F[i])) Q.set(F[i], v); }); }
 const CANAL = (Q.get('canal') || 'teuzin0dev').toLowerCase();
 const CID = Q.get('cid') || 'bnqg3ttxcusgbv0z6dzgmjnln64gn9';
 const MAXS = Math.max(5, Math.min(60, +Q.get('max') || 20));      // duração máxima na tela (s)
