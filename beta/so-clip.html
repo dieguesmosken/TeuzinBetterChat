@@ -7,7 +7,7 @@
 <style>
   :root{--lilas:#A970FF;--roxo:#6B3FD4;--grafite:#1b1b22;--azul:#3FA9F5}
   html,body{margin:0;height:100%;background:transparent;overflow:hidden;font-family:"Segoe UI",system-ui,sans-serif}
-  #cartao{position:fixed;left:50%;bottom:6%;width:min(62vw,1100px);aspect-ratio:16/9;transform:translateX(-50%) scale(.92);opacity:0;
+  #cartao{position:fixed;left:50%;bottom:4%;width:min(calc(var(--tam,88) * 1vw),calc(var(--tam,88) * 1vh * 16 / 9));aspect-ratio:16/9;transform:translateX(-50%) scale(.92);opacity:0;
     transition:opacity .45s,transform .45s;border-radius:18px;overflow:hidden;background:#000;border:3px solid var(--lilas);
     box-shadow:0 0 0 3px var(--grafite),0 12px 40px rgba(107,63,212,.55)}
   #cartao.on{opacity:1;transform:translateX(-50%) scale(1)}
@@ -42,6 +42,7 @@ const CID = Q.get('cid') || 'bnqg3ttxcusgbv0z6dzgmjnln64gn9';
 const MAXS = Math.max(5, Math.min(60, +Q.get('max') || 20));      // duração máxima na tela (s)
 const NIVEL = Q.get('nivel') || 'mod';                             // quem pode usar o !so
 const CMD = (Q.get('cmd') || '!so').toLowerCase();
+document.documentElement.style.setProperty('--tam', Math.max(20, Math.min(100, +Q.get('tam') || 88)));
 const KTOK = 'teyo-soclip-token';
 const REDIR = location.origin + location.pathname;
 
@@ -116,13 +117,13 @@ async function tocar(login) {
     const usarEmbed = () => {
       m.innerHTML = '';
       const f = document.createElement('iframe');
-      f.allow = 'autoplay'; f.src = 'https://clips.twitch.tv/embed?clip=' + encodeURIComponent(clip.id) + '&parent=' + location.hostname + '&autoplay=true&muted=false';
+      f.allow = 'autoplay'; f.src = 'https://clips.twitch.tv/embed?clip=' + encodeURIComponent(clip.id) + '&parent=' + location.hostname + '&autoplay=true&muted=false&volume=1';
       m.appendChild(f);
     };
     const mp4 = mp4De(clip);
     if (mp4) {
       const v = document.createElement('video');
-      v.src = mp4; v.autoplay = true; v.playsInline = true;
+      v.src = mp4; v.autoplay = true; v.playsInline = true; v.muted = false; v.volume = 1;
       v.onended = () => fechar(true);
       v.onerror = usarEmbed;
       m.appendChild(v);
