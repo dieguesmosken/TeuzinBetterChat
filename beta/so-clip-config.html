@@ -274,8 +274,11 @@ $('sair').onclick = async () => {
 
 function estado() {
   const k = ler(KTOK), e = $('st');
-  if (k && k.t && k.em > Date.now() + 60000) { e.textContent = '✔ conectado'; e.className = 'st ok'; }
+  const ok = !!(k && k.t && k.em > Date.now() + 60000);
+  if (ok) { e.textContent = '✔ conectado'; e.className = 'st ok'; }
   else { e.textContent = 'não conectado'; e.className = 'st no'; }
+  $('entrar').style.display = ok ? 'none' : '';   // conectado: só "Sair"; desconectado: só "Entrar"
+  $('sair').style.display = ok ? '' : 'none';
 }
 aplicarNaTela(); atualizar(); estado();
 </script>
