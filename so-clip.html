@@ -7,7 +7,7 @@
 <style>
   :root{--lilas:#A970FF;--roxo:#6B3FD4;--grafite:#1b1b22;--azul:#3FA9F5}
   html,body{margin:0;height:100%;background:transparent;overflow:hidden;font-family:"Segoe UI",system-ui,sans-serif}
-  #cartao{position:fixed;left:var(--x,50%);bottom:var(--y,4%);width:min(calc(var(--tam,48) * 1vw),calc(var(--tam,48) * 1vh * 16 / 9));aspect-ratio:16/9;transform:translate(var(--tx,-50%),var(--ty,0)) scale(.92);opacity:0;
+  #cartao{box-sizing:border-box;position:fixed;left:var(--x,50%);bottom:var(--y,4%);width:min(calc(var(--tam,48) * 1vw),calc(var(--tam,48) * 1vh * 16 / 9));aspect-ratio:16/9;transform:translate(var(--tx,-50%),var(--ty,0)) scale(.92);opacity:0;
     transition:opacity .45s,transform .45s;border-radius:var(--raio,18px);overflow:hidden;background:#000;border:var(--borda,3px) solid var(--lilas);
     box-shadow:0 0 0 3px var(--grafite),0 12px 40px rgba(107,63,212,.55)}
   #cartao.on{opacity:1;transform:translate(var(--tx,-50%),var(--ty,0)) scale(1)}
