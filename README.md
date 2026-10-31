@@ -18,6 +18,10 @@ Widget de chat da Twitch **leve, sem login e sem token**, feito para a *Fonte de
 
 ![Configurador](docs/configurador.png)
 
+## 🎬 Overlay de clips do `!so`
+
+Quando alguém usa `!so nomedocanal`, toca um clip aleatório daquele canal na sua live. Tem configurador, link curto, prévia e ducking de áudio. **Guia completo: [SO-CLIP.md](SO-CLIP.md)**.
+
 ## Como usar (online, pelo GitHub Pages) — recomendado
 
 Com o GitHub Pages ligado, o configurador já entrega um **link da internet** pronto para o OBS, sem precisar de arquivo no PC:

@@ -22,7 +22,7 @@
 <body><main>
 <nav><a href="config-chat.html">Configurador</a><a href="painel.html">Painel</a><a href="privacidade.html">Privacidade</a><a href="termos.html">Termos de uso</a><a href="https://github.com/dieguesmosken/TeuzinBetterChat">Código no GitHub</a></nav>
 <h1>Termos de <b>Uso</b></h1>
-<p class="su">TeuzinBetterChat · versão 2.0 · vigente desde 30 de outubro de 2026</p>
+<p class="su">TeuzinBetterChat · versão 2.1 · vigente desde 31 de outubro de 2026</p>
 
 <div class="caixa"><b>Resumo.</b> É uma ferramenta gratuita, em fase beta, oferecida "como está". Você usa por sua conta e responsabilidade, respeitando as regras das plataformas (Twitch, Kick, YouTube, TikTok). Quem aperta os botões de moderar é você. Veja também a <a href="privacidade.html">Política de Privacidade</a>.</div>
 
@@ -30,7 +30,7 @@
 <p>Ao abrir o configurador ou o painel, entrar com uma conta ou usar o link do chat, você declara que leu e concorda com estes Termos e com a <a href="privacidade.html">Política de Privacidade</a>. Se não concordar, não use. Ao entrar com o Google/YouTube, <b>você também concorda com os <a href="https://www.youtube.com/t/terms">Termos de Serviço do YouTube</a></b> (e com a <a href="https://policies.google.com/privacy">Política de Privacidade do Google</a>).</p>
 
 <h2>2. O que é o serviço</h2>
-<p>O TeuzinBetterChat é um conjunto de páginas e programas de código aberto (licença <a href="https://github.com/dieguesmosken/TeuzinBetterChat/blob/main/LICENSE">MIT</a>) que: (a) mostra o chat de Twitch, Kick, YouTube e TikTok na Fonte de Navegador do OBS; (b) oferece um <b>painel</b> para o dono do canal enviar mensagens e moderar (apagar, timeout, banir e desfazer); e (c) inclui, para a Kick e o Google, um servidor intermediário (worker) que protege o segredo dos aplicativos. É um projeto pessoal, sem fins lucrativos, mantido por Matheus (teuzin0dev).</p>
+<p>O TeuzinBetterChat é um conjunto de páginas e programas de código aberto (licença <a href="https://github.com/dieguesmosken/TeuzinBetterChat/blob/main/LICENSE">MIT</a>) que: (a) mostra o chat de Twitch, Kick, YouTube e TikTok na Fonte de Navegador do OBS; (b) oferece um <b>painel</b> para o dono do canal enviar mensagens e moderar (apagar, timeout, banir e desfazer); (c) inclui, para a Kick e o Google, um servidor intermediário (worker) que protege o segredo dos aplicativos; e (d) oferece o <b>overlay de clips do <code>!so</code></b> (<code>so-clip.html</code>) e seu configurador, que tocam na live um clip aleatório do canal indicado e, opcionalmente, guardam num <b>link curto</b> o texto das configurações visuais do overlay. É um projeto pessoal, sem fins lucrativos, mantido por Matheus (teuzin0dev).</p>
 <p>O projeto <b>não é afiliado, patrocinado nem endossado</b> por Twitch, Kick, Google/YouTube ou TikTok. Os nomes e marcas pertencem aos respectivos donos.</p>
 
 <h2>3. Fase beta e disponibilidade</h2>
@@ -66,6 +66,7 @@
 <li>usar o serviço para coletar, revender ou montar bases de dados sobre outras pessoas;</li>
 <li>tentar derrubar, invadir ou sobrecarregar o worker, o relay ou o site;</li>
 <li>usar credenciais de terceiros sem autorização.</li>
+<li>usar o overlay de clips para exibir conteúdo que viole as regras da Twitch, direitos de terceiros ou a lei, ou para assediar o canal exibido.</li>
 </ul>
 
 <h2>8. Recurso experimental do TikTok</h2>
@@ -73,6 +74,15 @@
 
 <h2>9. Conteúdo do chat e de terceiros</h2>
 <p>As mensagens, nomes, fotos, selos e emotes pertencem a quem os criou ou às plataformas e serviços de origem (inclusive 7TV, BetterTTV e FrankerFaceZ). O aplicativo apenas os exibe. Quem monta e transmite o overlay é responsável pelo que mostra na live, incluindo o respeito à privacidade e aos direitos de terceiros. Veja o item 3 da Política de Privacidade.</p>
+
+<h3>Overlay de clips do <code>!so</code></h3>
+<ul>
+<li><b>Recurso não oficial.</b> O arquivo de vídeo de um clip não é entregue pela API oficial da Twitch. O worker usa o mesmo endereço interno que o site da Twitch usa para tocar clips. Esse endereço pode mudar ou deixar de funcionar a qualquer momento e <b>pode não estar de acordo com as regras da Twitch</b>. Você usa esse recurso por sua conta e risco e pode desativá-lo não informando o worker (o overlay então usa só o player embutido da Twitch).</li>
+<li><b>Clips são de terceiros.</b> Os clips pertencem aos seus criadores e à Twitch. Quem exibe o clip na live é responsável por esse uso, inclusive por respeitar o canal exibido e as regras da plataforma.</li>
+<li><b>Seu login, sua responsabilidade.</b> O overlay usa o seu login da Twitch (sem permissão de escrita) apenas para buscar clips. Se você repassar o overlay a outras pessoas, cada uma usa o <b>próprio</b> login e o próprio OBS; nunca compartilhe tokens.</li>
+<li><b>Link curto.</b> O link curto guarda apenas o texto das configurações (por exemplo, o nome público do canal, cores e opções visuais) e pode ser apagado ou deixar de funcionar sem aviso. Não coloque nele dados pessoais ou sigilosos.</li>
+<li><b>Limites.</b> O worker compartilhado é gratuito e tem limite de uso; pode ser limitado ou desligado. Você pode criar o seu próprio worker (veja o <a href="https://github.com/dieguesmosken/TeuzinBetterChat/blob/main/SO-CLIP.md">guia</a>).</li>
+</ul>
 
 <h2>10. Propriedade intelectual</h2>
 <p>O código é livre sob a licença MIT: você pode usar, modificar e redistribuir, mantendo o aviso de licença. Nomes, logotipos e marcas de terceiros não fazem parte dessa licença.</p>

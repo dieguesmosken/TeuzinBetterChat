@@ -148,7 +148,36 @@
     <input type="text" id="worker" autocomplete="off" spellcheck="false">
   </div>
 
-  <footer>Feito para o canal <a href="https://www.twitch.tv/teuzin0dev" target="_blank" rel="noopener">teuzin0dev</a> · <a href="termos.html">Termos</a> · <a href="privacidade.html">Privacidade</a>. Nada é enviado para servidores deste projeto: suas escolhas ficam só no seu navegador.</footer>
+  <div class="card" style="margin-top:18px">
+    <h2>Abaixar o jogo/música quando o clip toca (compressor com sidechain)</h2>
+    <p style="margin:0 0 8px;font-size:14px">Para o público ouvir o clip, o resto do áudio precisa <b>abaixar sozinho</b> enquanto ele toca e voltar depois. No OBS isso se faz com o filtro <b>Compressor</b> usando o clip como <i>sidechain</i> (o “gatilho”): quando o clip faz som, o compressor abaixa a fonte onde o filtro está.</p>
+    <ol class="passos">
+      <li>Confirme que a fonte do overlay tem <b>Controlar áudio via OBS</b> marcado. Só assim ela aparece no <b>Mixer de Áudio</b> e pode ser usada como gatilho.</li>
+      <li>No Mixer, ache a fonte que deve <b>abaixar</b> (jogo, música, “Áudio do desktop”…). Clique na engrenagem dela → <b>Filtros</b>.</li>
+      <li>Em <b>Filtros de áudio</b>, clique em <b>+</b> → <b>Compressor</b>. Dê um nome, por exemplo <code>Ducking clip</code>.</li>
+      <li>No compressor, em <b>Fonte de Sidechain/Ducking</b>, escolha a fonte do overlay (a que você criou para o <code>!so</code>).</li>
+      <li>Use estes valores como ponto de partida:
+        <ul style="margin:6px 0 0">
+          <li><b>Razão:</b> <code>3:1</code> (quanto maior, mais ele abaixa)</li>
+          <li><b>Limiar:</b> <code>-50 dB</code> (o volume do gatilho a partir do qual ele começa a abaixar)</li>
+          <li><b>Ataque:</b> <code>30 ms</code> (rapidez para abaixar quando o clip começa)</li>
+          <li><b>Liberação:</b> <code>600 ms</code> (rapidez para voltar ao normal quando o clip acaba)</li>
+          <li><b>Ganho de saída:</b> <code>0 dB</code></li>
+        </ul>
+      </li>
+      <li>Repita nas outras fontes que devem abaixar. <b>Não</b> ponha o filtro na própria fonte do overlay.</li>
+    </ol>
+    <div class="dica" style="margin-top:10px">
+      <b>Ajuste fino</b> (teste com um <code>!so</code> de verdade; a prévia não toca áudio):<br>
+      • Não abaixa o bastante → limiar mais baixo (<code>-55 dB</code>) ou razão maior (<code>6:1</code>).<br>
+      • Abaixa demais e ninguém escuta o resto → limiar mais alto (<code>-40 dB</code>) ou razão menor (<code>2:1</code>).<br>
+      • O áudio “pula” de volta rápido demais → liberação maior (<code>800–1000 ms</code>).<br>
+      • O clip é baixinho e não dispara → ajuste o <b>Volume</b> acima ou deixe o limiar mais baixo.<br>
+      • Quer que o microfone também abaixe a música? Crie outro compressor igual na música, escolhendo o <b>microfone</b> como sidechain. Os dois filtros convivem.
+    </div>
+  </div>
+
+  <footer>Feito para o canal <a href="https://www.twitch.tv/teuzin0dev" target="_blank" rel="noopener">teuzin0dev</a> · <a href="https://github.com/dieguesmosken/TeuzinBetterChat/blob/main/SO-CLIP.md" target="_blank" rel="noopener">Guia completo</a> · <a href="termos.html">Termos</a> · <a href="privacidade.html">Privacidade</a>. Nada é enviado para servidores deste projeto: suas escolhas ficam só no seu navegador.</footer>
 </main>
 
 <script>
