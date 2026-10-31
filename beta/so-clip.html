@@ -7,10 +7,10 @@
 <style>
   :root{--lilas:#A970FF;--roxo:#6B3FD4;--grafite:#1b1b22;--azul:#3FA9F5}
   html,body{margin:0;height:100%;background:transparent;overflow:hidden;font-family:"Segoe UI",system-ui,sans-serif}
-  #cartao{position:fixed;left:50%;bottom:4%;width:min(calc(var(--tam,88) * 1vw),calc(var(--tam,88) * 1vh * 16 / 9));aspect-ratio:16/9;transform:translateX(-50%) scale(.92);opacity:0;
+  #cartao{position:fixed;left:var(--x,50%);bottom:var(--y,4%);width:min(calc(var(--tam,48) * 1vw),calc(var(--tam,48) * 1vh * 16 / 9));aspect-ratio:16/9;transform:translateX(var(--tx,-50%)) scale(.92);opacity:0;
     transition:opacity .45s,transform .45s;border-radius:18px;overflow:hidden;background:#000;border:3px solid var(--lilas);
     box-shadow:0 0 0 3px var(--grafite),0 12px 40px rgba(107,63,212,.55)}
-  #cartao.on{opacity:1;transform:translateX(-50%) scale(1)}
+  #cartao.on{opacity:1;transform:translateX(var(--tx,-50%)) scale(1)}
   video,iframe{width:100%;height:100%;border:0;object-fit:cover;background:#000;display:block}
   #nome{position:absolute;left:0;right:0;bottom:0;padding:14px 20px;color:#fff;font-weight:800;font-size:clamp(18px,2.4vw,34px);
     background:linear-gradient(transparent,rgba(27,27,34,.92));text-shadow:0 2px 6px #000}
@@ -42,7 +42,9 @@ const CID = Q.get('cid') || 'bnqg3ttxcusgbv0z6dzgmjnln64gn9';
 const MAXS = Math.max(5, Math.min(60, +Q.get('max') || 20));      // duração máxima na tela (s)
 const NIVEL = Q.get('nivel') || 'mod';                             // quem pode usar o !so
 const CMD = (Q.get('cmd') || '!so').toLowerCase();
-document.documentElement.style.setProperty('--tam', Math.max(20, Math.min(100, +Q.get('tam') || 88)));
+document.documentElement.style.setProperty('--tam', Math.max(20, Math.min(100, +Q.get('tam') || 48)));
+{ const pos = Q.get('pos') || 'centro', R = document.documentElement.style;
+  if (pos === 'esq') { R.setProperty('--x', '2%'); R.setProperty('--tx', '0'); } else if (pos === 'dir') { R.setProperty('--x', '98%'); R.setProperty('--tx', '-100%'); } }
 const KTOK = 'teyo-soclip-token';
 const REDIR = location.origin + location.pathname;
 
@@ -114,23 +116,30 @@ async function tocar(login) {
     const { u, clip } = r;
     $('nome').innerHTML = '💜 ' + u.display_name.replace(/[<>&]/g, '') + '<small>' + clip.title.replace(/[<>&]/g, '') + '</small>';
     const m = $('media'); m.innerHTML = '';
+    // o relógio só começa quando o clip realmente começa (carregar o vídeo leva alguns segundos)
+    const armar = extra => { clearTimeout(timer); timer = setTimeout(() => fechar(true), (Math.min(MAXS, Math.ceil(clip.duration)) + extra) * 1000); };
+    let embedado = false;
     const usarEmbed = () => {
+      if (embedado) return; embedado = true;
       m.innerHTML = '';
       const f = document.createElement('iframe');
       f.allow = 'autoplay'; f.src = 'https://clips.twitch.tv/embed?clip=' + encodeURIComponent(clip.id) + '&parent=' + location.hostname + '&autoplay=true&muted=false&volume=1';
+      f.onload = () => armar(4);
       m.appendChild(f);
     };
     const mp4 = mp4De(clip);
     if (mp4) {
       const v = document.createElement('video');
       v.src = mp4; v.autoplay = true; v.playsInline = true; v.muted = false; v.volume = 1;
+      v.onplaying = () => armar(2);
       v.onended = () => fechar(true);
       v.onerror = usarEmbed;
       m.appendChild(v);
       v.play().catch(usarEmbed);
+      timer = setTimeout(usarEmbed, 8000); // se o mp4 não começar em 8 s, usa o player do Twitch
+      v.onplaying = () => { clearTimeout(timer); armar(2); };
     } else usarEmbed();
     $('cartao').classList.add('on');
-    timer = setTimeout(() => fechar(true), Math.min(MAXS, Math.ceil(clip.duration) + 1) * 1000);
   } catch (e) { st(String(e)); tocando = false; setTimeout(proximo, 1000); }
 }
 function pedir(login) {
