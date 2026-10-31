@@ -12,9 +12,9 @@
     box-shadow:0 0 0 3px var(--grafite),0 12px 40px rgba(107,63,212,.55)}
   #cartao.on{opacity:1;transform:translate(var(--tx,-50%),var(--ty,0)) scale(1)}
   video,iframe{width:100%;height:100%;border:0;object-fit:cover;background:#000;display:block}
-  #nome{display:var(--nome,block);position:absolute;left:0;right:0;bottom:0;padding:14px 20px;color:#fff;font-weight:800;font-size:clamp(18px,2.4vw,34px);
+  #nome{display:var(--nome,block);position:absolute;left:0;right:0;bottom:0;padding:14px 20px;color:var(--cn,#fff);font-weight:800;font-size:clamp(18px,2.4vw,34px);
     background:linear-gradient(transparent,rgba(27,27,34,.92));text-shadow:0 2px 6px #000}
-  #nome small{display:var(--titulo,block);font-weight:600;font-size:.55em;color:#cdb6ff}
+  #nome small{display:var(--titulo,block);font-weight:600;font-size:.55em;color:var(--ct,#cdb6ff)}
   /* painel de entrada (aparece só quando falta o token; use "Interagir" no OBS) */
   #login{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#1b1b22;color:#fff;text-align:center;padding:24px}
   #login button{background:var(--lilas);border:0;color:#fff;font-weight:700;font-size:18px;padding:12px 22px;border-radius:10px;cursor:pointer}
@@ -46,13 +46,14 @@ if (Q.has('k')) { const W = (Q.get('worker') || 'https://teuzinbetterchat-kick.t
     .catch(() => { document.body.insertAdjacentHTML('beforeend', '<div style="font:14px sans-serif;color:#fff;background:#c33;padding:8px">Link curto inválido ou worker sem KV.</div>'); });
   throw new Error('redirecionando pelo link curto'); }
 /* ?s=canal,cor,borda,raio,vol,max,nivel,nome,titulo,cmd — todas as opções num código só (vazio = padrão) */
-{ const F = ['canal','cor','borda','raio','vol','max','nivel','nome','titulo','cmd'], c = Q.get('s');
+{ const F = ['canal','cor','borda','raio','vol','max','nivel','nome','titulo','cmd','emoji','cn','ct'], c = Q.get('s');
   if (c) c.split(',').forEach((v, i) => { v = v.trim(); if (v && F[i] && !Q.has(F[i])) Q.set(F[i], v); }); }
 const CANAL = (Q.get('canal') || 'teuzin0dev').toLowerCase();
 const CID = Q.get('cid') || 'bnqg3ttxcusgbv0z6dzgmjnln64gn9';
 const MAXS = Math.max(5, Math.min(60, +Q.get('max') || 20));      // duração máxima na tela (s)
 const NIVEL = Q.get('nivel') || 'mod';                             // quem pode usar o !so
 const CMD = (Q.get('cmd') || '!so').toLowerCase();
+const EMOJI = Q.get('emoji') === '0' ? '' : ((Q.get('emoji') || '💜').replace(/[<>&]/g, '').slice(0, 8) + ' ');   // ?emoji=0 desliga; ?emoji=🔥 troca
 document.documentElement.style.setProperty('--tam', Math.max(20, Math.min(100, +Q.get('tam') || 100)));
 /* ?cx=36&cy=39 centraliza o cartão nesse ponto (em % da tela, a partir do canto superior esquerdo) */
 if (!Q.has('pos')) { const R = document.documentElement.style;
@@ -65,6 +66,7 @@ else { const pos = Q.get('pos') || 'centro', R = document.documentElement.style;
   if (/^[0-9a-fA-F]{6}$/.test(cor)) R.setProperty('--lilas', '#' + cor);
   R.setProperty('--borda', Math.max(0, Math.min(12, +(Q.get('borda') ?? 3))) + 'px');
   R.setProperty('--raio', Math.max(0, Math.min(60, +(Q.get('raio') ?? 18))) + 'px');
+  for (const [k, v] of [['cn', '--cn'], ['ct', '--ct']]) { const h = (Q.get(k) || '').replace('#', ''); if (/^[0-9a-fA-F]{6}$/.test(h)) R.setProperty(v, '#' + h); }
   if (Q.get('nome') === '0') R.setProperty('--nome', 'none');
   if (Q.get('titulo') === '0') R.setProperty('--titulo', 'none'); }
 const VOL = Math.max(0, Math.min(100, +(Q.get('vol') ?? 100))) / 100;
@@ -141,7 +143,7 @@ async function tocar(login) {
     const r = await clipAleatorio(login);
     if (!r || !r.clip) { tocando = false; st('sem clips: ' + login); return proximo(); }
     const { u, clip } = r;
-    $('nome').innerHTML = '💜 ' + u.display_name.replace(/[<>&]/g, '') + '<small>' + clip.title.replace(/[<>&]/g, '') + '</small>';
+    $('nome').innerHTML = EMOJI + u.display_name.replace(/[<>&]/g, '') + '<small>' + clip.title.replace(/[<>&]/g, '') + '</small>';
     const m = $('media'); m.innerHTML = '';
     // o relógio só começa quando o clip realmente começa (carregar o vídeo leva alguns segundos)
     const armar = extra => { clearTimeout(timer); timer = setTimeout(() => fechar(true), (Math.min(MAXS, Math.ceil(clip.duration)) + extra) * 1000); };

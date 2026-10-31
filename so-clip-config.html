@@ -79,6 +79,13 @@
         <input type="range" id="borda" min="0" max="12" value="3">
         <label for="raio">Cantos arredondados: <b id="raioV"></b></label>
         <input type="range" id="raio" min="0" max="60" value="18">
+        <label class="chk"><input type="checkbox" id="emojiOn" checked> Mostrar um emoji antes do nome</label>
+        <label for="emoji">Emoji (cole o que quiser)</label>
+        <input type="text" id="emoji" maxlength="6" autocomplete="off" style="width:90px">
+        <label for="cn">Cor do nome do canal</label>
+        <div class="lin"><input type="color" id="cn" value="#ffffff"></div>
+        <label for="ct">Cor do título do clip</label>
+        <div class="lin"><input type="color" id="ct" value="#cdb6ff"></div>
         <label class="chk"><input type="checkbox" id="nome" checked> Mostrar o nome do canal sobre o clip</label>
         <label class="chk"><input type="checkbox" id="titulo" checked> Mostrar o título do clip</label>
       </div>
@@ -97,7 +104,7 @@
       <div class="card">
         <h2>Prévia</h2>
         <div class="tela"><div class="jogo">sua tela de jogo</div>
-          <div id="pv"><div class="play">▶</div><div class="nm" id="pvNm">💜 <span>NomeDoCanal</span><small>Título do clip aparece aqui</small></div></div>
+          <div id="pv"><div class="play">▶</div><div class="nm" id="pvNm"><b id="pvEm">💜 </b><span>NomeDoCanal</span><small>Título do clip aparece aqui</small></div></div>
         </div>
         <p class="dica">Só uma ilustração do estilo. O tamanho e a posição você define no OBS, arrastando a fonte.</p>
       </div>
@@ -152,13 +159,13 @@ const PRESETS = ['#A970FF', '#FF5C8A', '#3FA9F5', '#5AD19A', '#FFB84D', '#FFFFFF
 const ler = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
 const gravar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 
-const campos = { canal: '', cmd: '!so', nivel: 'mod', cor: '#a970ff', borda: 3, raio: 18, nome: true, titulo: true, vol: 100, max: 20, worker: WORKER_PADRAO, tcanal: '' };
+const campos = { canal: '', cmd: '!so', nivel: 'mod', cor: '#a970ff', borda: 3, raio: 18, nome: true, titulo: true, vol: 100, max: 20, emojiOn: true, emoji: '💜', cn: '#ffffff', ct: '#cdb6ff', worker: WORKER_PADRAO, tcanal: '' };
 const cfg = Object.assign({}, campos, ler(KCFG) || {});
 if (!cfg.worker) cfg.worker = WORKER_PADRAO;
 // a URL do configurador também aceita ?canal=...&cor=...
 { const q = new URLSearchParams(location.search);
-  if (q.get('s')) q.get('s').split(',').forEach((v, i) => { const k = ['canal','cor','borda','raio','vol','max','nivel','nome','titulo','cmd'][i]; if (!v || !k) return;
-    if (k === 'cor') cfg.cor = '#' + v.replace('#', ''); else if (k === 'nome' || k === 'titulo') cfg[k] = v !== '0'; else cfg[k] = k === 'cmd' ? decodeURIComponent(v) : v; });
+  if (q.get('s')) q.get('s').split(',').forEach((v, i) => { const k = ['canal','cor','borda','raio','vol','max','nivel','nome','titulo','cmd','emoji','cn','ct'][i]; if (!v || !k) return;
+    if (k === 'cn' || k === 'ct') cfg[k] = '#' + v; else if (k === 'emoji') { if (v === '0') cfg.emojiOn = false; else cfg.emoji = decodeURIComponent(v); } else if (k === 'cor') cfg.cor = '#' + v.replace('#', ''); else if (k === 'nome' || k === 'titulo') cfg[k] = v !== '0'; else cfg[k] = k === 'cmd' ? decodeURIComponent(v) : v; });
   for (const k of ['canal', 'cmd', 'nivel', 'borda', 'raio', 'vol', 'max', 'worker']) if (q.has(k)) cfg[k] = q.get(k);
   if (q.has('cor')) cfg.cor = '#' + q.get('cor').replace('#', '');
   if (q.get('nome') === '0') cfg.nome = false; if (q.get('titulo') === '0') cfg.titulo = false; }
@@ -170,14 +177,17 @@ function aplicarNaTela() {
 function lerDaTela() {
   for (const k of Object.keys(campos)) { const e = $(k); if (!e) continue; cfg[k] = e.type === 'checkbox' ? e.checked : (e.type === 'range' || e.type === 'number' ? +e.value : e.value.trim()); }
 }
-const CAMPOS_S = ['canal','cor','borda','raio','vol','max','nivel','nome','titulo','cmd'];
+const CAMPOS_S = ['canal','cor','borda','raio','vol','max','nivel','nome','titulo','cmd','emoji','cn','ct'];
 function codigo() {   // todas as opções num texto curto; vazio = padrão
   const canal = cfg.canal.replace(/^@|^https?:\/\/(www\.)?twitch\.tv\//i, '').toLowerCase().replace(/[^a-z0-9_]/g, '');
   const v = {
     canal, cor: cfg.cor.toLowerCase() !== '#a970ff' ? cfg.cor.replace('#', '').toUpperCase() : '',
     borda: +cfg.borda !== 3 ? cfg.borda : '', raio: +cfg.raio !== 18 ? cfg.raio : '', vol: +cfg.vol !== 100 ? cfg.vol : '', max: +cfg.max !== 20 ? cfg.max : '',
     nivel: cfg.nivel !== 'mod' ? cfg.nivel : '', nome: cfg.nome ? '' : '0', titulo: cfg.titulo ? '' : '0',
-    cmd: cfg.cmd && cfg.cmd.toLowerCase() !== '!so' ? encodeURIComponent(cfg.cmd.toLowerCase()) : ''
+    cmd: cfg.cmd && cfg.cmd.toLowerCase() !== '!so' ? encodeURIComponent(cfg.cmd.toLowerCase()) : '',
+    emoji: !cfg.emojiOn ? '0' : (cfg.emoji && cfg.emoji !== '💜' ? encodeURIComponent(cfg.emoji) : ''),
+    cn: cfg.cn.toLowerCase() !== '#ffffff' ? cfg.cn.replace('#', '').toUpperCase() : '',
+    ct: cfg.ct.toLowerCase() !== '#cdb6ff' ? cfg.ct.replace('#', '').toUpperCase() : ''
   };
   return CAMPOS_S.map(k => v[k]).join(',').replace(/,+$/, '');
 }
@@ -194,6 +204,7 @@ function atualizar() {
   const pv = $('pv'); pv.style.border = cfg.borda + 'px solid ' + cfg.cor; pv.style.borderRadius = cfg.raio + 'px';
   pv.style.boxShadow = '0 0 0 3px #1b1b22, 0 10px 30px ' + cfg.cor + '88';
   $('pvNm').style.display = cfg.nome ? 'block' : 'none'; $('pvNm').querySelector('small').style.display = cfg.titulo ? 'block' : 'none';
+  $('pvEm').textContent = cfg.emojiOn ? (cfg.emoji || '') + ' ' : ''; $('pvNm').style.color = cfg.cn; $('pvNm').querySelector('small').style.color = cfg.ct;
   $('pvNm').querySelector('span').textContent = (cfg.tcanal || 'NomeDoCanal');
   $('url').textContent = montarUrl();
   $('copiar').disabled = !cfg.canal;
