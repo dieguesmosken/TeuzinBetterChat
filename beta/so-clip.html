@@ -61,9 +61,19 @@ $('entrar').onclick = entrar;
   if (Q.get('error')) { const e = document.createElement('p'); e.style.color = '#ff8f8f'; e.textContent = 'Twitch recusou: ' + Q.get('error') + ' — ' + (Q.get('error_description') || ''); document.querySelector('#login div').appendChild(e); }
   if (!location.hash.includes('access_token')) return;
   const h = new URLSearchParams(location.hash.slice(1));
-  if (h.get('state') === ler('teyo-soclip-state')) gravar(KTOK, { t: h.get('access_token'), em: Date.now() + (+h.get('expires_in') || 0) * 1000 });
+  // o fluxo implícito do Twitch não devolve expires_in: o prazo vem do /validate
+  if (h.get('state') === ler('teyo-soclip-state')) gravar(KTOK, { t: h.get('access_token'), em: Date.now() + 3600e3 });
   history.replaceState(null, '', location.pathname + location.search);
 })();
+async function validar() {
+  const k = ler(KTOK); if (!k) return;
+  try {
+    const r = await fetch('https://id.twitch.tv/oauth2/validate', { headers: { Authorization: 'OAuth ' + k.t } });
+    if (r.status === 401) { localStorage.removeItem(KTOK); return; }
+    const j = await r.json();
+    gravar(KTOK, { t: k.t, em: Date.now() + (j.expires_in || 3600) * 1000 });
+  } catch {}
+}
 function token() { const k = ler(KTOK); return k && k.t && k.em > Date.now() + 60000 ? k.t : null; }
 
 async function helix(path) {
@@ -149,8 +159,8 @@ function ouvir() {
   ws.onclose = () => setTimeout(ouvir, 3000);
 }
 
-if (!token()) $('login').style.display = 'flex';
-else { const e = $('status'); e.textContent = '✅ Conectado — aguardando !so no chat de #' + CANAL; e.style.display = 'block'; setTimeout(() => { e.style.display = Q.has('debug') ? 'block' : 'none'; }, 6000); }
+validar().then(() => { if (!token()) $('login').style.display = 'flex'; });
+if (token()) { const e = $('status'); e.textContent = '✅ Conectado — aguardando !so no chat de #' + CANAL; e.style.display = 'block'; setTimeout(() => { e.style.display = Q.has('debug') ? 'block' : 'none'; }, 6000); }
 ouvir();
 if (Q.get('teste')) setTimeout(() => token() ? pedir(Q.get('teste')) : st('sem token'), 1500);
 </script>
