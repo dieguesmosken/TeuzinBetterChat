@@ -263,8 +263,14 @@ $('curto').onclick = async () => {
 };
 $('previa').onclick = () => { lerDaTela(); window.open(montarUrl({ previa: '1' }), '_blank'); };
 $('testar').onclick = () => { lerDaTela(); const t = (cfg.tcanal || '').toLowerCase().replace(/[^a-z0-9_]/g, ''); window.open(montarUrl(t ? { teste: t, debug: '1' } : { debug: '1' }), '_blank'); };
-$('entrar').onclick = () => { lerDaTela(); location.href = montarUrl({ debug: '1' }); };   // a própria página do overlay faz o login e mostra o estado
-$('sair').onclick = () => { try { localStorage.removeItem(KTOK); } catch {} estado(); };
+$('entrar').onclick = () => { lerDaTela(); location.href = BASE + '?entrar=config'; };   // a página do overlay abre a autorização do app e volta para cá   // a própria página do overlay faz o login e mostra o estado
+const CID = 'bnqg3ttxcusgbv0z6dzgmjnln64gn9';   // o app da Twitch usado pelo overlay (o mesmo de so-clip.html)
+$('sair').onclick = async () => {
+  const k = ler(KTOK), b = $('sair'); b.disabled = true;
+  if (k && k.t) { try { await fetch('https://id.twitch.tv/oauth2/revoke', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ client_id: CID, token: k.t }) }); } catch {} }   // revoga o token na Twitch
+  try { localStorage.removeItem(KTOK); } catch {}
+  estado(); b.disabled = false;
+};
 
 function estado() {
   const k = ler(KTOK), e = $('st');

@@ -40,7 +40,7 @@ Quando alguém da sua live digita `!so nomedocanal`, o overlay toca na tela **um
 1. Abra o [configurador](https://www.teuzin.com.br/TeuzinBetterChat/beta/so-clip-config.html) e escreva o **seu canal** da Twitch.
 2. Escolha cor, borda, emoji etc. e clique em **Copiar URL** (ou em **Gerar link curto**).
 3. No OBS: **Fontes → + → Navegador**. Cole a URL. Largura **960**, altura **540**. Marque **Controlar áudio via OBS** e confirme.
-4. Clique com o botão direito na fonte → **Interagir** → **Entrar com a Twitch** e autorize. Isso é feito **uma vez**: o OBS lembra.
+4. Clique com o botão direito na fonte → **Interagir** → **Entrar com a Twitch** e autorize. Isso é feito **uma vez**: o OBS lembra. A tela de autorização do app da Twitch sempre aparece (assim o login é explícito); no configurador, **Sair** apaga o login e também revoga o acesso na Twitch.
 5. Arraste/redimensione a fonte para onde o clip deve aparecer. Ela fica invisível até alguém usar o comando.
 6. Teste: um moderador digita `!so nomedeumcanal` no seu chat. Se preferir, antes use o botão **Ver prévia do cartão**.
 7. (Recomendado) Configure o [compressor](#abaixar-o-jogomúsica-quando-o-clip-toca) para o jogo/música abaixarem enquanto o clip toca.
