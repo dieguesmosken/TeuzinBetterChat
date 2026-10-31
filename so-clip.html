@@ -88,7 +88,7 @@ function entrar() {
 $('entrar').onclick = entrar;
 /* ?entrar=config: vindo do configurador, abre direto a autorização e, ao voltar, retorna ao configurador */
 if (Q.get('entrar') !== 'config' && !location.hash.includes('access_token')) { try { localStorage.removeItem('teyo-soclip-volta'); } catch {} }   // login cancelado: não deixa a marca para depois
-if (Q.get('entrar') === 'config' && !location.hash.includes('access_token')) { gravar('teyo-soclip-volta', 'config'); entrar(); }
+if (Q.get('entrar') === 'config' && !location.hash.includes('access_token')) { document.documentElement.style.visibility = 'hidden'; gravar('teyo-soclip-volta', 'config'); entrar(); }   // esconde a página enquanto vai para a Twitch (sem piscar o painel de login)
 (function voltou() {
   if (Q.get('error')) { const e = document.createElement('p'); e.style.color = '#ff8f8f'; e.textContent = 'Twitch recusou: ' + Q.get('error') + ' — ' + (Q.get('error_description') || ''); document.querySelector('#login div').appendChild(e); }
   if (!location.hash.includes('access_token')) return;
@@ -104,7 +104,7 @@ async function validar() {
     const r = await fetch('https://id.twitch.tv/oauth2/validate', { headers: { Authorization: 'OAuth ' + k.t } });
     if (r.status === 401) { localStorage.removeItem(KTOK); return; }
     const j = await r.json();
-    gravar(KTOK, { t: k.t, em: Date.now() + (j.expires_in || 3600) * 1000 });
+    gravar(KTOK, { t: k.t, login: j.login || k.login, em: Date.now() + (j.expires_in || 3600) * 1000 });
   } catch {}
 }
 function token() { const k = ler(KTOK); return k && k.t && k.em > Date.now() + 60000 ? k.t : null; }
