@@ -150,6 +150,7 @@ function ouvir() {
 }
 
 if (!token()) $('login').style.display = 'flex';
+else { const e = $('status'); e.textContent = '✅ Conectado — aguardando !so no chat de #' + CANAL; e.style.display = 'block'; setTimeout(() => { e.style.display = Q.has('debug') ? 'block' : 'none'; }, 6000); }
 ouvir();
 if (Q.get('teste')) setTimeout(() => token() ? pedir(Q.get('teste')) : st('sem token'), 1500);
 </script>
