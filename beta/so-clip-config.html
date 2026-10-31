@@ -281,6 +281,17 @@ function estado() {
   $('sair').style.display = ok ? '' : 'none';
 }
 aplicarNaTela(); atualizar(); estado();
+/* conectado: descobre o nome do canal da conta e preenche o campo (se estiver vazio) */
+async function preencherCanal() {
+  const k = ler(KTOK); if (!k || !k.t) return;
+  let login = k.login;
+  if (!login) {
+    try { const r = await fetch('https://id.twitch.tv/oauth2/validate', { headers: { Authorization: 'OAuth ' + k.t } });
+      if (!r.ok) return; const d = await r.json(); login = d.login; if (login) { k.login = login; gravar(KTOK, k); } } catch { return; }
+  }
+  if (login && !cfg.canal) { cfg.canal = login; $('canal').value = login; atualizar(); }
+}
+preencherCanal();
 </script>
 </body>
 </html>
