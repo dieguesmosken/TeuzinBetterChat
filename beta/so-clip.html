@@ -38,6 +38,13 @@
 /* o redirect do Twitch está cadastrado com www; no domínio sem www o login se perde */
 if (location.hostname === 'teuzin.com.br') location.replace('https://www.teuzin.com.br' + location.pathname + location.search + location.hash);
 const Q = new URLSearchParams(location.search);
+/* ?k=ID (link curto): busca o código no worker e recarrega com ?s=... */
+if (Q.has('k')) { const W = (Q.get('worker') || 'https://teuzinbetterchat-kick.teuzin0dev.workers.dev').replace(/\/+$/, '');
+  fetch(W + '/cfg/' + encodeURIComponent(Q.get('k'))).then(r => r.json()).then(d => {
+    if (!d.s) throw 0; const u = new URLSearchParams(location.search); u.delete('k'); u.set('s', d.s);
+    location.replace(location.pathname + '?' + u.toString().replace(/%2C/g, ',')); })
+    .catch(() => { document.body.insertAdjacentHTML('beforeend', '<div style="font:14px sans-serif;color:#fff;background:#c33;padding:8px">Link curto inválido ou worker sem KV.</div>'); });
+  throw new Error('redirecionando pelo link curto'); }
 /* ?s=canal,cor,borda,raio,vol,max,nivel,nome,titulo,cmd — todas as opções num código só (vazio = padrão) */
 { const F = ['canal','cor','borda','raio','vol','max','nivel','nome','titulo','cmd'], c = Q.get('s');
   if (c) c.split(',').forEach((v, i) => { v = v.trim(); if (v && F[i] && !Q.has(F[i])) Q.set(F[i], v); }); }
