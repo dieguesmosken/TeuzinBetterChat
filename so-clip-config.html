@@ -153,6 +153,7 @@ const gravar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } c
 
 const campos = { canal: '', cmd: '!so', nivel: 'mod', cor: '#a970ff', borda: 3, raio: 18, nome: true, titulo: true, vol: 100, max: 20, worker: WORKER_PADRAO, tcanal: '' };
 const cfg = Object.assign({}, campos, ler(KCFG) || {});
+if (!cfg.worker) cfg.worker = WORKER_PADRAO;
 // a URL do configurador também aceita ?canal=...&cor=...
 { const q = new URLSearchParams(location.search);
   for (const k of ['canal', 'cmd', 'nivel', 'borda', 'raio', 'vol', 'max', 'worker']) if (q.has(k)) cfg[k] = q.get(k);
@@ -199,7 +200,7 @@ $('corTxt').addEventListener('input', () => { const v = $('corTxt').value.trim()
 PRESETS.forEach(c => { const b = document.createElement('button'); b.style.background = c; b.title = c; b.onclick = () => { $('cor').value = c.toLowerCase(); $('corTxt').value = c; atualizar(); }; $('cores').appendChild(b); });
 
 $('copiar').onclick = async () => { try { await navigator.clipboard.writeText($('url').textContent); $('copiar').textContent = 'Copiado ✔'; } catch { const r = document.createRange(); r.selectNode($('url')); getSelection().removeAllRanges(); getSelection().addRange(r); $('copiar').textContent = 'Selecionado: Ctrl+C'; } setTimeout(() => $('copiar').textContent = 'Copiar URL', 2200); };
-$('testar').onclick = () => { lerDaTela(); const t = (cfg.tcanal || '').toLowerCase().replace(/[^a-z0-9_]/g, ''); window.open(montarUrl(t ? { teste: t, debug: '1' } : { debug: '1' }).replace('tam=100&cx=50&cy=50', 'tam=60&cx=50&cy=50'), '_blank'); };
+$('testar').onclick = () => { lerDaTela(); const t = (cfg.tcanal || '').toLowerCase().replace(/[^a-z0-9_]/g, ''); window.open(montarUrl(t ? { teste: t, debug: '1' } : { debug: '1' }), '_blank'); };
 $('entrar').onclick = () => { lerDaTela(); location.href = montarUrl({ debug: '1' }); };   // a própria página do overlay faz o login e mostra o estado
 $('sair').onclick = () => { try { localStorage.removeItem(KTOK); } catch {} estado(); };
 

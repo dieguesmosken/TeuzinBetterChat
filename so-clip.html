@@ -153,7 +153,7 @@ async function tocar(login) {
       v.onended = () => fechar(true);
       v.onerror = usarEmbed;
       m.appendChild(v);
-      v.play().catch(usarEmbed);
+      v.play().catch(() => { v.muted = true; v.play().catch(usarEmbed); });   // aba sem interação bloqueia som: toca mudo em vez de cair no embed (no OBS o som funciona)
       timer = setTimeout(usarEmbed, 8000); // se o mp4 não começar em 8 s, usa o player do Twitch
       v.onplaying = () => { clearTimeout(timer); armar(2); };
     } else usarEmbed();
