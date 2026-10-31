@@ -29,6 +29,7 @@
     &login=SEU_LOGIN&token=TOKEN   entra na Twitch autenticado (o token vale como senha!)
     &kick=canal&kickid=ID  chat da Kick (kickid = numero da sala; veja o configurador)
     &yt=ID_DO_VIDEO&ytkey=CHAVE   chat do YouTube (chave da YouTube Data API v3)
+    &ytrt=TOKEN&worker=URL         chat do YouTube pelo login do Google (yt= vazio usa a live ativa)
     &ytint=6              segundos entre consultas do YouTube (minimo 3)
     &relay=ws://localhost:8787     recebe mensagens de um relay (ex.: TikTok, veja relay/)
     &plat=1               mostra o selo da plataforma em cada mensagem (automatico com 2+ fontes)
@@ -102,9 +103,11 @@
   const KICKID = (P.get('kickid') || '').trim();
   const YT = (P.get('yt') || '').trim();
   const YTKEY = (P.get('ytkey') || '').trim();
+  const YTRT = (P.get('ytrt') || '').trim();   // login do Google (refresh token); dispensa a chave de API
+  const YTW = (P.get('worker') || 'https://teuzinbetterchat-kick.teuzin0dev.workers.dev').replace(/\/+$/, '');
   const YTINT = Math.max(3, parseFloat(P.get('ytint') || '6'));
   const RELAY = (P.get('relay') || '').trim();
-  const FONTES = (TW_ON ? 1 : 0) + (KICK || KICKID ? 1 : 0) + (YT && YTKEY ? 1 : 0) + (RELAY ? 1 : 0);
+  const FONTES = (TW_ON ? 1 : 0) + (KICK || KICKID ? 1 : 0) + ((YT && YTKEY) || YTRT ? 1 : 0) + (RELAY ? 1 : 0);
   const SHOWPLAT = P.get('plat') === '1' || FONTES > 1;
   const OCULTOS = new Set((P.has('hide') ? P.get('hide') :
     'nightbot,streamelements,streamlabs,moobot,fossabot,wizebot,sery_bot,soundalerts,commanderroot')
@@ -466,20 +469,38 @@
   }
 
   // ---------- YouTube (YouTube Data API v3, consulta de tempos em tempos) ----------
+  let ytAT = '', ytAte = 0;
+  async function ytToken() {
+    if (Date.now() < ytAte) return ytAT;
+    const r = await fetch(YTW + '/yt/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: YTRT }) });
+    const j = await r.json(); if (!r.ok || !j.access_token) throw new Error('login do Google expirou, entre de novo no configurador');
+    ytAT = j.access_token; ytAte = Date.now() + (j.expires_in || 3600) * 1000 - 120000; return ytAT;
+  }
+  async function ytGet(url) {
+    if (YTRT) return (await fetch(url, { headers: { Authorization: 'Bearer ' + await ytToken() } })).json();
+    return (await fetch(url + '&key=' + encodeURIComponent(YTKEY))).json();
+  }
   async function iniciarYouTube() {
     try {
-      const r = await fetch('https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=' + encodeURIComponent(YT) + '&key=' + encodeURIComponent(YTKEY));
-      const j = await r.json();
-      if (j.error) throw new Error(j.error.message || 'erro');
-      const chatId = j.items && j.items[0] && j.items[0].liveStreamingDetails && j.items[0].liveStreamingDetails.activeLiveChatId;
-      if (!chatId) { setStatus('YouTube: esse vídeo não tem chat ao vivo'); return; }
+      let chatId = '';
+      if (YTRT && !YT) {   // sem ID de video: pega a live ativa do canal que fez login
+        const j = await ytGet('https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet&broadcastStatus=active&mine=true');
+        if (j.error) throw new Error(j.error.message || 'erro');
+        chatId = j.items && j.items[0] && j.items[0].snippet && j.items[0].snippet.liveChatId;
+        if (!chatId) { setStatus('YouTube: nenhuma live ativa, tentando de novo…'); setTimeout(iniciarYouTube, 30000); return; }
+      } else {
+        const j = await ytGet('https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=' + encodeURIComponent(YT));
+        if (j.error) throw new Error(j.error.message || 'erro');
+        chatId = j.items && j.items[0] && j.items[0].liveStreamingDetails && j.items[0].liveStreamingDetails.activeLiveChatId;
+        if (!chatId) { setStatus('YouTube: esse vídeo não tem chat ao vivo'); return; }
+      }
       setStatus('YouTube conectado ✓'); setTimeout(() => setStatus(''), 2500);
       let token = '', primeira = true;
       const ciclo = async () => {
         let espera_ms = YTINT * 1000;
         try {
-          const u = 'https://www.googleapis.com/youtube/v3/liveChat/messages?part=snippet,authorDetails&maxResults=200&liveChatId=' + encodeURIComponent(chatId) + (token ? '&pageToken=' + encodeURIComponent(token) : '') + '&key=' + encodeURIComponent(YTKEY);
-          const d = await (await fetch(u)).json();
+          const u = 'https://www.googleapis.com/youtube/v3/liveChat/messages?part=snippet,authorDetails&maxResults=200&liveChatId=' + encodeURIComponent(chatId) + (token ? '&pageToken=' + encodeURIComponent(token) : '');
+          const d = await ytGet(u);
           if (d.error) throw new Error(d.error.message || 'erro');
           token = d.nextPageToken || token;
           espera_ms = Math.max(espera_ms, d.pollingIntervalMillis || 0);
@@ -548,7 +569,7 @@
   else {
     if (TW_ON) conectar();
     if (KICK || KICKID) iniciarKick();
-    if (YT && YTKEY) iniciarYouTube();
+    if ((YT && YTKEY) || YTRT) iniciarYouTube();
     if (RELAY) iniciarRelay();
     if (!FONTES) setStatus('nenhuma fonte de chat configurada');
   }
