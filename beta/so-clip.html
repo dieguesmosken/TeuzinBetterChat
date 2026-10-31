@@ -8,13 +8,13 @@
   :root{--lilas:#A970FF;--roxo:#6B3FD4;--grafite:#1b1b22;--azul:#3FA9F5}
   html,body{margin:0;height:100%;background:transparent;overflow:hidden;font-family:"Segoe UI",system-ui,sans-serif}
   #cartao{position:fixed;left:var(--x,50%);bottom:var(--y,4%);width:min(calc(var(--tam,48) * 1vw),calc(var(--tam,48) * 1vh * 16 / 9));aspect-ratio:16/9;transform:translate(var(--tx,-50%),var(--ty,0)) scale(.92);opacity:0;
-    transition:opacity .45s,transform .45s;border-radius:18px;overflow:hidden;background:#000;border:3px solid var(--lilas);
+    transition:opacity .45s,transform .45s;border-radius:var(--raio,18px);overflow:hidden;background:#000;border:var(--borda,3px) solid var(--lilas);
     box-shadow:0 0 0 3px var(--grafite),0 12px 40px rgba(107,63,212,.55)}
   #cartao.on{opacity:1;transform:translate(var(--tx,-50%),var(--ty,0)) scale(1)}
   video,iframe{width:100%;height:100%;border:0;object-fit:cover;background:#000;display:block}
-  #nome{position:absolute;left:0;right:0;bottom:0;padding:14px 20px;color:#fff;font-weight:800;font-size:clamp(18px,2.4vw,34px);
+  #nome{display:var(--nome,block);position:absolute;left:0;right:0;bottom:0;padding:14px 20px;color:#fff;font-weight:800;font-size:clamp(18px,2.4vw,34px);
     background:linear-gradient(transparent,rgba(27,27,34,.92));text-shadow:0 2px 6px #000}
-  #nome small{display:block;font-weight:600;font-size:.55em;color:#cdb6ff}
+  #nome small{display:var(--titulo,block);font-weight:600;font-size:.55em;color:#cdb6ff}
   /* painel de entrada (aparece só quando falta o token; use "Interagir" no OBS) */
   #login{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#1b1b22;color:#fff;text-align:center;padding:24px}
   #login button{background:var(--lilas);border:0;color:#fff;font-weight:700;font-size:18px;padding:12px 22px;border-radius:10px;cursor:pointer}
@@ -29,6 +29,7 @@
     <h2>🐺 Clip do !so</h2>
     <p>Falta autorizar o Twitch uma vez. No OBS: clique com o botão direito nesta fonte → <b>Interagir</b> → entre com a sua conta. O token fica salvo só neste navegador do OBS e serve apenas para buscar clips (nenhuma permissão de escrita).</p>
     <button id="entrar">Entrar com a Twitch</button>
+    <p><a href="so-clip-config.html" style="color:#cdb6ff">← voltar ao configurador</a></p>
   </div>
 </div>
 <div id="status"></div>
@@ -49,6 +50,14 @@ if (Q.has('cx') && Q.has('cy')) { const R = document.documentElement.style;
   document.getElementById('cartao').style.cssText += ';top:' + (+Q.get('cy')) + '%;bottom:auto'; }
 else { const pos = Q.get('pos') || 'centro', R = document.documentElement.style;
   if (pos === 'esq') { R.setProperty('--x', '2%'); R.setProperty('--tx', '0'); } else if (pos === 'dir') { R.setProperty('--x', '98%'); R.setProperty('--tx', '-100%'); } }
+/* aparencia: ?cor=A970FF&borda=3&raio=18&vol=100&titulo=0&nome=0 */
+{ const R = document.documentElement.style, cor = (Q.get('cor') || '').replace('#', '');
+  if (/^[0-9a-fA-F]{6}$/.test(cor)) R.setProperty('--lilas', '#' + cor);
+  R.setProperty('--borda', Math.max(0, Math.min(12, +(Q.get('borda') ?? 3))) + 'px');
+  R.setProperty('--raio', Math.max(0, Math.min(60, +(Q.get('raio') ?? 18))) + 'px');
+  if (Q.get('nome') === '0') R.setProperty('--nome', 'none');
+  if (Q.get('titulo') === '0') R.setProperty('--titulo', 'none'); }
+const VOL = Math.max(0, Math.min(100, +(Q.get('vol') ?? 100))) / 100;
 const WORKER = (Q.get('worker') || '').replace(/\/+$/, '');
 const KTOK = 'teyo-soclip-token';
 const REDIR = location.origin + location.pathname;
@@ -131,7 +140,7 @@ async function tocar(login) {
       if (embedado) return; embedado = true;
       m.innerHTML = '';
       const f = document.createElement('iframe');
-      f.allow = 'autoplay'; f.src = 'https://clips.twitch.tv/embed?clip=' + encodeURIComponent(clip.id) + '&parent=' + location.hostname + '&autoplay=true&muted=false&volume=1';
+      f.allow = 'autoplay'; f.src = 'https://clips.twitch.tv/embed?clip=' + encodeURIComponent(clip.id) + '&parent=' + location.hostname + '&autoplay=true&muted=false&volume=' + VOL;
       f.onload = () => armar(4);
       m.appendChild(f);
     };
@@ -139,7 +148,7 @@ async function tocar(login) {
     if (WORKER) { try { const w = await (await fetch(WORKER + '/clip/' + encodeURIComponent(clip.id))).json(); if (w.url) mp4 = w.url; } catch {} }
     if (mp4) {
       const v = document.createElement('video');
-      v.src = mp4; v.autoplay = true; v.playsInline = true; v.muted = false; v.volume = 1;
+      v.src = mp4; v.autoplay = true; v.playsInline = true; v.muted = false; v.volume = VOL;
       v.onplaying = () => armar(2);
       v.onended = () => fechar(true);
       v.onerror = usarEmbed;
@@ -179,7 +188,7 @@ function ouvir() {
 }
 
 validar().then(() => { if (!token()) $('login').style.display = 'flex'; });
-if (token()) { const e = $('status'); e.textContent = '✅ Conectado — aguardando !so no chat de #' + CANAL; e.style.display = 'block'; setTimeout(() => { e.style.display = Q.has('debug') ? 'block' : 'none'; }, 6000); }
+if (token()) { const e = $('status'); e.innerHTML = '✅ Conectado — aguardando !so no chat de #' + CANAL + (Q.has('debug') ? ' · <a href="so-clip-config.html" style="color:#cdb6ff">voltar ao configurador</a>' : ''); e.style.display = 'block'; setTimeout(() => { e.style.display = Q.has('debug') ? 'block' : 'none'; }, 6000); }
 ouvir();
 if (Q.get('teste')) setTimeout(() => token() ? pedir(Q.get('teste')) : st('sem token'), 1500);
 </script>

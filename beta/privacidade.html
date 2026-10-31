@@ -29,6 +29,7 @@
 <li>Não temos cadastro, banco de dados de usuários, anúncios, rastreadores nem estatísticas de uso.</li>
 <li>Seus logins (tokens) e configurações ficam <b>só no seu navegador</b> (<code>localStorage</code>). Nós não os guardamos em servidor.</li>
 <li>As mensagens do chat são lidas, mostradas na tela e <b>não são gravadas</b> por nós.</li>
+<li>O overlay de clips do <code>!so</code> (<code>so-clip.html</code>) lê o chat público do canal por conexão anônima, busca clips pela API da Twitch usando o login do próprio streamer e pede ao worker o endereço do vídeo do clip (o worker recebe apenas o código do clip e não grava nada).</li>
 <li>Para o login com Kick e Google/YouTube existe um servidor intermediário (Cloudflare Worker) que usa o segredo do aplicativo. Ele <b>repassa</b> os dados e não armazena nada.</li>
 <li>Nada é vendido, alugado ou usado para publicidade.</li>
 </ul></div>
