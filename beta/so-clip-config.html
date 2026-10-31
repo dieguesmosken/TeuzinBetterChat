@@ -125,6 +125,7 @@
         <div class="ac">
           <button class="bt" id="copiar">Copiar URL</button>
           <button class="bt" id="curto">Gerar link curto</button>
+          <button class="bt sec" id="previa">Ver prévia do cartão</button>
           <button class="bt sec" id="testar">Testar no navegador</button>
         </div>
         <label for="tcanal">Canal para testar (um canal que tenha clips)</label>
@@ -231,6 +232,7 @@ $('curto').onclick = async () => {
   } catch (e) { b.textContent = 'Falhou: ' + e.message; }
   b.disabled = false; setTimeout(() => b.textContent = 'Gerar link curto', 3000);
 };
+$('previa').onclick = () => { lerDaTela(); window.open(montarUrl({ previa: '1' }), '_blank'); };
 $('testar').onclick = () => { lerDaTela(); const t = (cfg.tcanal || '').toLowerCase().replace(/[^a-z0-9_]/g, ''); window.open(montarUrl(t ? { teste: t, debug: '1' } : { debug: '1' }), '_blank'); };
 $('entrar').onclick = () => { lerDaTela(); location.href = montarUrl({ debug: '1' }); };   // a própria página do overlay faz o login e mostra o estado
 $('sair').onclick = () => { try { localStorage.removeItem(KTOK); } catch {} estado(); };
