@@ -18,8 +18,8 @@
   .abas a:hover{filter:brightness(1.2)}
   .abas a.on{background:linear-gradient(135deg,var(--roxo),var(--lilas));color:#fff;border-color:transparent;box-shadow:0 4px 16px rgba(123,44,242,.4)}
   .quadro{display:grid;gap:18px;padding:18px 22px 22px;
-    grid-template-columns:minmax(0,1fr) 400px;grid-template-rows:auto auto auto;
-    grid-template-areas:"barra lateral" "previa lateral" "guia guia"}
+    grid-template-columns:minmax(0,1fr) 400px;grid-template-rows:auto auto 1fr auto;
+    grid-template-areas:"barra lateral" "previa lateral" "folga lateral" "guia guia"}
   @media(max-width:1000px){.quadro{grid-template-columns:1fr;grid-template-rows:auto;
     grid-template-areas:"barra" "lateral" "previa" "guia"}}
   .moldura{border:var(--borda) solid var(--roxo);border-radius:28px;background:rgba(10,6,24,.92);box-shadow:0 0 28px rgba(123,44,242,.35)}
