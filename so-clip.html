@@ -34,6 +34,8 @@
 <div id="status"></div>
 <script>
 /* Parâmetros na URL: ?canal=teuzin0dev&max=20&teste=login&cid=SEU_CLIENT_ID&nivel=mod|vip|todos */
+/* o redirect do Twitch está cadastrado com www; no domínio sem www o login se perde */
+if (location.hostname === 'teuzin.com.br') location.replace('https://www.teuzin.com.br' + location.pathname + location.search + location.hash);
 const Q = new URLSearchParams(location.search);
 const CANAL = (Q.get('canal') || 'teuzin0dev').toLowerCase();
 const CID = Q.get('cid') || 'bnqg3ttxcusgbv0z6dzgmjnln64gn9';
@@ -56,6 +58,7 @@ function entrar() {
 }
 $('entrar').onclick = entrar;
 (function voltou() {
+  if (Q.get('error')) { const e = document.createElement('p'); e.style.color = '#ff8f8f'; e.textContent = 'Twitch recusou: ' + Q.get('error') + ' — ' + (Q.get('error_description') || ''); document.querySelector('#login div').appendChild(e); }
   if (!location.hash.includes('access_token')) return;
   const h = new URLSearchParams(location.hash.slice(1));
   if (h.get('state') === ler('teyo-soclip-state')) gravar(KTOK, { t: h.get('access_token'), em: Date.now() + (+h.get('expires_in') || 0) * 1000 });
