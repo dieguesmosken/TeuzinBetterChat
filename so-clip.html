@@ -92,8 +92,11 @@ async function clipAleatorio(login) {
   if (!u) return null;
   const c = (await helix('clips?broadcaster_id=' + u.id + '&first=100')).data;
   if (!c.length) return { u, clip: null };
-  const curtos = c.filter(x => x.duration <= MAXS + 5);
-  const lista = curtos.length ? curtos : c;
+  // prefere clips com mp4 direto (sem player do Twitch, sem aviso de conteúdo maduro e com som garantido)
+  const diretos = c.filter(x => mp4De(x));
+  const base = diretos.length ? diretos : c;
+  const curtos = base.filter(x => x.duration <= MAXS + 5);
+  const lista = curtos.length ? curtos : base;
   return { u, clip: lista[Math.floor(Math.random() * lista.length)] };
 }
 function mp4De(clip) {
