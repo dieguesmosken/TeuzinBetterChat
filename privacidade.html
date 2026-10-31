@@ -22,14 +22,14 @@
 <body><main>
 <nav><a href="config-chat.html">Configurador</a><a href="painel.html">Painel</a><a href="privacidade.html">Privacidade</a><a href="termos.html">Termos de uso</a><a href="https://github.com/dieguesmosken/TeuzinBetterChat">Código no GitHub</a></nav>
 <h1>Política de <b>Privacidade</b></h1>
-<p class="su">TeuzinBetterChat · versão 2.0 · vigente desde 30 de outubro de 2026</p>
+<p class="su">TeuzinBetterChat · versão 2.1 · vigente desde 31 de outubro de 2026</p>
 
 <div class="caixa"><b>Resumo em linguagem simples.</b>
 <ul>
 <li>Não temos cadastro, banco de dados de usuários, anúncios, rastreadores nem estatísticas de uso.</li>
 <li>Seus logins (tokens) e configurações ficam <b>só no seu navegador</b> (<code>localStorage</code>). Nós não os guardamos em servidor.</li>
 <li>As mensagens do chat são lidas, mostradas na tela e <b>não são gravadas</b> por nós.</li>
-<li>O overlay de clips do <code>!so</code> (<code>so-clip.html</code>) lê o chat público do canal por conexão anônima, busca clips pela API da Twitch usando o login do próprio streamer e pede ao worker o endereço do vídeo do clip (o worker recebe apenas o código do clip e não grava nada).</li>
+<li>O overlay de clips do <code>!so</code> (<code>so-clip.html</code>) lê o chat público do canal por conexão anônima, busca clips pela API da Twitch usando o login do próprio streamer e pede ao worker o endereço do vídeo do clip (o worker recebe apenas o código do clip e não grava nada). Se você usar o <b>link curto</b>, o worker guarda o texto das configurações visuais (veja a tabela abaixo).</li>
 <li>Para o login com Kick e Google/YouTube existe um servidor intermediário (Cloudflare Worker) que usa o segredo do aplicativo. Ele <b>repassa</b> os dados e não armazena nada.</li>
 <li>Nada é vendido, alugado ou usado para publicidade.</li>
 </ul></div>
@@ -44,6 +44,7 @@
 <tr><td><b>Tokens de acesso</b> (Twitch, Kick, Google/YouTube) e, quando existir, o <i>refresh token</i></td><td>Manter você conectado para ler o chat, enviar mensagens e moderar</td><td>No <code>localStorage</code> do seu navegador. Não são enviados a nós. Só seguem para a própria plataforma (e para o worker, na troca/renovação do login de Kick e Google)</td></tr>
 <tr><td><b>Dados básicos da conta</b> que a plataforma devolve ao logar (identificador, nome de usuário do canal)</td><td>Saber qual é o seu canal e mostrar "Conectado como…"</td><td>No seu navegador</td></tr>
 <tr><td><b>Configurações</b>: canal, Client IDs, endereço do worker/relay, intervalo, filtros e, se você optar, a chave da API do YouTube</td><td>Lembrar suas escolhas</td><td>No seu navegador. O <b>link gerado para o OBS</b> também contém essas escolhas; só leva o token ou a chave se você marcar essa opção</td></tr>
+<tr><td><b>Link curto do overlay do <code>!so</code></b> (opcional)</td><td>Encurtar a URL do overlay</td><td>No <b>Cloudflare KV</b>: apenas o texto das configurações (nome público do canal, cores, emoji e opções visuais), sem login, token ou dado pessoal. O código é calculado a partir do conteúdo; a mesma configuração reaproveita o mesmo código. Sem prazo definido; pode ser apagado a qualquer momento (pedido por e-mail)</td></tr>
 <tr><td><b>Mensagens do chat</b> (nome de exibição, cor, selos, texto, foto de perfil)</td><td>Mostrar o chat na tela e permitir apagar, dar timeout ou banir</td><td>Só em memória, na página aberta (o painel mantém as últimas mensagens na tela). <b>Não gravamos.</b> O relay apenas repassa em tempo real</td></tr>
 <tr><td><b>Ações de moderação e mensagens enviadas</b></td><td>Executar o que você pediu no clique</td><td>Vão direto para a plataforma (pelo worker, no caso da Kick). Não guardamos histórico</td></tr>
 <tr><td><b>Dados técnicos</b> (endereço IP, navegador, data/hora)</td><td>Funcionamento e segurança dos provedores de hospedagem</td><td>Nos registros dos provedores (item 4). Nós não temos acesso a um painel de análise de visitantes</td></tr>
@@ -58,7 +59,7 @@
 <div class="tabela"><table>
 <tr><th>Serviço</th><th>O que faz aqui</th><th>O que ele pode receber</th></tr>
 <tr><td><b>GitHub Pages</b> (hospedagem do site)</td><td>Entrega as páginas e o código</td><td>IP e dados da requisição, nos registros do GitHub</td></tr>
-<tr><td><b>Cloudflare Workers</b> (worker de login)</td><td>Guarda o segredo dos aplicativos da Kick e do Google e faz a troca/renovação/revogação de tokens; repassa pedidos de enviar/apagar/moderar na Kick</td><td>Código de login, tokens e o conteúdo do pedido, apenas durante o processamento; IP nos registros da Cloudflare. <b>O código do worker não grava nem registra esse conteúdo</b></td></tr>
+<tr><td><b>Cloudflare Workers e KV</b> (worker de login, de clips e do link curto)</td><td>Guarda o segredo dos aplicativos da Kick e do Google e faz a troca/renovação/revogação de tokens; repassa pedidos de enviar/apagar/moderar na Kick</td><td>Código de login, tokens e o conteúdo do pedido, apenas durante o processamento; IP nos registros da Cloudflare. <b>O código do worker não grava nem registra esse conteúdo</b></td></tr>
 <tr><td><b>Render</b> (relay do chat da Kick/TikTok)</td><td>Lê o chat público da Kick (e, se ativado, do TikTok) e repassa por WebSocket</td><td>Mensagens públicas em trânsito; IP de quem conecta nos registros do Render. O relay <b>não grava</b> mensagens e não recebe seus tokens</td></tr>
 <tr><td><b>Twitch</b> (login, IRC, API, selos)</td><td>Leitura do chat, envio e moderação</td><td>Seu token e os pedidos que você faz</td></tr>
 <tr><td><b>Kick</b> (login, API oficial, chat)</td><td>Envio, moderação e leitura do chat</td><td>Idem</td></tr>
@@ -90,7 +91,7 @@
 <h2>7. Por quanto tempo guardamos</h2>
 <ul>
 <li><b>No seu navegador:</b> até você clicar em <b>Sair</b>, limpar os dados do site ou os tokens expirarem. O login da Twitch pelo configurador dura cerca de 3 a 4 horas. Em aplicativos do Google em modo de teste, o token de renovação expira em 7 dias.</li>
-<li><b>Nos nossos servidores:</b> não mantemos dados seus. O que passa pelo worker e pelo relay é descartado depois do processamento.</li>
+<li><b>Nos nossos servidores:</b> não mantemos dados seus. O que passa pelo worker e pelo relay é descartado depois do processamento. A única exceção é o texto das configurações do <b>link curto</b> do overlay de clips (sem dados pessoais), guardado enquanto o link existir.</li>
 <li><b>Nos provedores:</b> registros de acesso ficam pelo tempo definido por cada um (GitHub, Cloudflare, Render).</li>
 </ul>
 

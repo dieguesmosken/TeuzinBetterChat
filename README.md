@@ -18,6 +18,10 @@ Widget de chat da Twitch **leve, sem login e sem token**, feito para a *Fonte de
 
 ![Configurador](docs/configurador.png)
 
+## 🎬 Overlay de clips do `!so`
+
+Quando alguém usa `!so nomedocanal`, toca um clip aleatório daquele canal na sua live. Tem configurador, link curto, prévia e ducking de áudio. **Guia completo: [SO-CLIP.md](SO-CLIP.md)**.
+
 ## Como usar (online, pelo GitHub Pages) — recomendado
 
 Com o GitHub Pages ligado, o configurador já entrega um **link da internet** pronto para o OBS, sem precisar de arquivo no PC:
@@ -68,10 +72,35 @@ chat.html?channel=seucanal&size=24&max=20&fade=60&avatar=1
 - **Respostas de bots não aparecem:** use `hide=` (vazio) e, para comandos, `cmds=1`.
 - **Fotos de perfil:** vêm de serviços públicos (unavatar, com plano B pela IVR). Quem não tiver foto aparece com a inicial do nome.
 
-## Privacidade
+## Privacidade e termos
 
-O widget só **lê** o chat público. Nada é enviado ao canal e nenhuma credencial é guardada. As APIs usadas são todas públicas (Twitch badges, IVR, 7TV, BTTV, FFZ, unavatar).
+- [Política de Privacidade](https://www.teuzin.com.br/TeuzinBetterChat/privacidade.html) · [Termos de Uso](https://www.teuzin.com.br/TeuzinBetterChat/termos.html) (fontes em `privacidade.html` e `termos.html`).
+- **Chat só para exibir:** o widget lê o chat público e não grava mensagens. Sem cadastro, sem anúncios, sem estatísticas.
+- **Login (2.0, opcional):** os tokens de Twitch, Kick e Google/YouTube ficam só no `localStorage` do seu navegador. O worker (`kick-worker/`) guarda o segredo dos apps da Kick e do Google e apenas repassa os pedidos; o relay (`relay/`) só repassa o chat público.
+- **Cuidado com o link:** a opção "colocar o login no link" e a chave da API do YouTube no link tornam o link tão sensível quanto uma senha. Nunca mostre na live.
+- **Serviços de terceiros:** fotos de perfil (unavatar/IVR/DecAPI, desligado por padrão), emotes (7TV, BTTV, FFZ) e selos da Twitch recebem o IP de quem roda o chat; o configurador carrega fonte do Google Fonts.
+- O TikTok usa uma biblioteca não oficial e é experimental.
+- Não é afiliado a Twitch, Kick, Google/YouTube ou TikTok.
 
 ## Licença
 
 [MIT](LICENSE). Feito com 💜 pela matilha do Teyo.
+
+## Versão 2.0 beta: multichat e login (branch `feat/multichat-auth`)
+
+- **Multichat:** Twitch + Kick + YouTube na mesma tela, com selo da plataforma. TikTok via relay local (veja `relay/`).
+- **Login da Twitch (opcional):** o configurador tem o botão "Entrar com a Twitch". Cada streamer pode usar o **próprio Client ID** (registrado em dev.twitch.tv) ou o do projeto, quando existir. O token fica só no seu navegador e só entra no link se você marcar.
+- Parâmetros novos do link: `kick`, `kickid`, `yt`, `ytkey`, `ytint`, `relay`, `plat`, `login`, `token`, e `channel=` vazio para não usar a Twitch.
+
+| Plataforma | Como lê | Observações |
+|---|---|---|
+| Twitch | IRC (anônimo ou autenticado) | já estável |
+| Kick | WebSocket público da sala | não oficial, pode mudar; precisa do número da sala |
+| YouTube | YouTube Data API v3 (consulta periódica) | precisa de chave; a cota diária é limitada |
+| TikTok | relay local não oficial | experimental, roda no seu PC |
+
+Beta: Kick, YouTube e TikTok foram testados só com conexões simuladas, ainda não numa live real.
+
+### Painel da Kick (enviar mensagens e moderar)
+`painel.html` entra com a Kick (OAuth + PKCE), envia mensagens como o dono do canal e mostra o chat com botões de apagar, timeout (10 min) e banir.
+Precisa do worker em `kick-worker/` (guarda o segredo do app). Veja `kick-worker/README.md`. Beta, ainda não testado numa conta real da Kick.
