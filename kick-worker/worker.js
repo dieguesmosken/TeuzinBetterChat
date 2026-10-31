@@ -110,6 +110,23 @@ export default {
         return new Response(JSON.stringify({ url: q.sourceURL + '?sig=' + tok.signature + '&token=' + encodeURIComponent(tok.value), quality: q.quality }),
           { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...c.h } });
       }
+      // ---- Link curto das configuracoes do overlay (KV, opcional). Mesmo conteudo => mesmo codigo (nao duplica). ----
+      if (url.pathname === '/cfg' && req.method === 'POST') {
+        if (!env.CFG) return json({ erro: 'kv nao configurado' }, 501, c.h);
+        const s = String((await req.json()).s || '');
+        if (!/^[A-Za-z0-9_,.%-]{1,200}$/.test(s)) return json({ erro: 'codigo invalido' }, 400, c.h);
+        const h = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)));
+        const id = btoa(String.fromCharCode(...h.slice(0, 6))).replace(/\+/g, '-').replace(/\//g, '_');
+        if (!(await env.CFG.get(id))) await env.CFG.put(id, s);
+        return json({ id }, 200, c.h);
+      }
+      if (url.pathname.startsWith('/cfg/') && req.method === 'GET') {
+        if (!env.CFG) return json({ erro: 'kv nao configurado' }, 501, c.h);
+        const id = url.pathname.slice(5);
+        if (!/^[A-Za-z0-9_-]{8}$/.test(id)) return json({ erro: 'id invalido' }, 400, c.h);
+        const s = await env.CFG.get(id);
+        return s ? json({ s }, 200, c.h) : json({ erro: 'nao encontrado' }, 404, c.h);
+      }
       if (url.pathname.startsWith('/api/')) {
         const caminho = url.pathname.slice(5);
         if (!ROTAS.some(([m, re]) => m === req.method && re.test(caminho))) return json({ erro: 'rota nao permitida' }, 403, c.h);

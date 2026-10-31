@@ -117,6 +117,7 @@
         <div id="url"></div>
         <div class="ac">
           <button class="bt" id="copiar">Copiar URL</button>
+          <button class="bt" id="curto">Gerar link curto</button>
           <button class="bt sec" id="testar">Testar no navegador</button>
         </div>
         <label for="tcanal">Canal para testar (um canal que tenha clips)</label>
@@ -202,6 +203,19 @@ $('corTxt').addEventListener('input', () => { const v = $('corTxt').value.trim()
 PRESETS.forEach(c => { const b = document.createElement('button'); b.style.background = c; b.title = c; b.onclick = () => { $('cor').value = c.toLowerCase(); $('corTxt').value = c; atualizar(); }; $('cores').appendChild(b); });
 
 $('copiar').onclick = async () => { try { await navigator.clipboard.writeText($('url').textContent); $('copiar').textContent = 'Copiado ✔'; } catch { const r = document.createRange(); r.selectNode($('url')); getSelection().removeAllRanges(); getSelection().addRange(r); $('copiar').textContent = 'Selecionado: Ctrl+C'; } setTimeout(() => $('copiar').textContent = 'Copiar URL', 2200); };
+$('curto').onclick = async () => {
+  lerDaTela(); const b = $('curto'), c = codigo();
+  if (!cfg.canal) return; b.disabled = true; b.textContent = 'Gerando…';
+  try {
+    const w = (cfg.worker || WORKER_PADRAO).replace(/\/+$/, '');
+    const r = await fetch(w + '/cfg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ s: c }) });
+    const d = await r.json(); if (!d.id) throw new Error(d.erro || r.status);
+    const p = new URLSearchParams(); p.set('k', d.id); if (w !== WORKER_PADRAO) p.set('worker', w);
+    const u = BASE + '?' + p.toString().replace(/%3A/g, ':').replace(/%2F/g, '/');
+    $('url').textContent = u; try { await navigator.clipboard.writeText(u); b.textContent = 'Link curto copiado ✔'; } catch { b.textContent = 'Link curto gerado'; }
+  } catch (e) { b.textContent = 'Falhou: ' + e.message; }
+  b.disabled = false; setTimeout(() => b.textContent = 'Gerar link curto', 3000);
+};
 $('testar').onclick = () => { lerDaTela(); const t = (cfg.tcanal || '').toLowerCase().replace(/[^a-z0-9_]/g, ''); window.open(montarUrl(t ? { teste: t, debug: '1' } : { debug: '1' }), '_blank'); };
 $('entrar').onclick = () => { lerDaTela(); location.href = montarUrl({ debug: '1' }); };   // a própria página do overlay faz o login e mostra o estado
 $('sair').onclick = () => { try { localStorage.removeItem(KTOK); } catch {} estado(); };
