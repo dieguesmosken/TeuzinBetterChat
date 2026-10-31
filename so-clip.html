@@ -43,11 +43,11 @@ const CID = Q.get('cid') || 'bnqg3ttxcusgbv0z6dzgmjnln64gn9';
 const MAXS = Math.max(5, Math.min(60, +Q.get('max') || 20));      // duração máxima na tela (s)
 const NIVEL = Q.get('nivel') || 'mod';                             // quem pode usar o !so
 const CMD = (Q.get('cmd') || '!so').toLowerCase();
-document.documentElement.style.setProperty('--tam', Math.max(20, Math.min(100, +Q.get('tam') || 48)));
+document.documentElement.style.setProperty('--tam', Math.max(20, Math.min(100, +Q.get('tam') || 100)));
 /* ?cx=36&cy=39 centraliza o cartão nesse ponto (em % da tela, a partir do canto superior esquerdo) */
-if (Q.has('cx') && Q.has('cy')) { const R = document.documentElement.style;
-  R.setProperty('--x', (+Q.get('cx')) + '%'); R.setProperty('--tx', '-50%'); R.setProperty('--ty', '-50%');
-  document.getElementById('cartao').style.cssText += ';top:' + (+Q.get('cy')) + '%;bottom:auto'; }
+if (!Q.has('pos')) { const R = document.documentElement.style;
+  R.setProperty('--x', (Q.has('cx') ? +Q.get('cx') : 50) + '%'); R.setProperty('--tx', '-50%'); R.setProperty('--ty', '-50%');
+  document.getElementById('cartao').style.cssText += ';top:' + (Q.has('cy') ? +Q.get('cy') : 50) + '%;bottom:auto'; }
 else { const pos = Q.get('pos') || 'centro', R = document.documentElement.style;
   if (pos === 'esq') { R.setProperty('--x', '2%'); R.setProperty('--tx', '0'); } else if (pos === 'dir') { R.setProperty('--x', '98%'); R.setProperty('--tx', '-100%'); } }
 /* aparencia: ?cor=A970FF&borda=3&raio=18&vol=100&titulo=0&nome=0 */
@@ -58,7 +58,7 @@ else { const pos = Q.get('pos') || 'centro', R = document.documentElement.style;
   if (Q.get('nome') === '0') R.setProperty('--nome', 'none');
   if (Q.get('titulo') === '0') R.setProperty('--titulo', 'none'); }
 const VOL = Math.max(0, Math.min(100, +(Q.get('vol') ?? 100))) / 100;
-const WORKER = (Q.get('worker') || '').replace(/\/+$/, '');
+const WORKER = (Q.get('worker') || 'https://teuzinbetterchat-kick.teuzin0dev.workers.dev').replace(/\/+$/, '');
 const KTOK = 'teyo-soclip-token';
 const REDIR = location.origin + location.pathname;
 

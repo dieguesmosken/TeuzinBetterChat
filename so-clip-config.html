@@ -173,7 +173,6 @@ function montarUrl(extra) {
   if (canal) p.set('canal', canal);
   if (cfg.cmd && cfg.cmd.toLowerCase() !== '!so') p.set('cmd', cfg.cmd.toLowerCase());
   if (cfg.nivel !== 'mod') p.set('nivel', cfg.nivel);
-  p.set('tam', '100'); p.set('cx', '50'); p.set('cy', '50');   // o cartão preenche a fonte do OBS
   if (cfg.cor.toLowerCase() !== '#a970ff') p.set('cor', cfg.cor.replace('#', '').toUpperCase());
   if (+cfg.borda !== 3) p.set('borda', cfg.borda);
   if (+cfg.raio !== 18) p.set('raio', cfg.raio);
@@ -181,7 +180,7 @@ function montarUrl(extra) {
   if (!cfg.titulo) p.set('titulo', '0');
   if (+cfg.vol !== 100) p.set('vol', cfg.vol);
   if (+cfg.max !== 20) p.set('max', cfg.max);
-  if (cfg.worker) p.set('worker', cfg.worker.replace(/\/+$/, ''));
+  if (cfg.worker && cfg.worker.replace(/\/+$/, '') !== WORKER_PADRAO) p.set('worker', cfg.worker.replace(/\/+$/, ''));
   if (extra) for (const [k, v] of Object.entries(extra)) p.set(k, v);
   return BASE + '?' + p.toString().replace(/%3A/g, ':').replace(/%2F/g, '/');
 }
