@@ -18,18 +18,18 @@
   .abas a:hover{filter:brightness(1.2)}
   .abas a.on{background:linear-gradient(135deg,var(--roxo),var(--lilas));color:#fff;border-color:transparent;box-shadow:0 4px 16px rgba(123,44,242,.4)}
   .quadro{display:grid;gap:18px;padding:18px 22px 22px;
-    grid-template-columns:minmax(0,1fr) 400px;grid-template-rows:minmax(0,1fr) auto auto;
-    grid-template-areas:"previa lateral" "barra lateral" "guia guia"}
+    grid-template-columns:minmax(0,1fr) 400px;grid-template-rows:auto auto auto;
+    grid-template-areas:"barra lateral" "previa lateral" "guia guia"}
   @media(max-width:1000px){.quadro{grid-template-columns:1fr;grid-template-rows:auto;
     grid-template-areas:"barra" "lateral" "previa" "guia"}}
   .moldura{border:var(--borda) solid var(--roxo);border-radius:28px;background:rgba(10,6,24,.92);box-shadow:0 0 28px rgba(123,44,242,.35)}
-  .previa{grid-area:previa;display:flex;flex-direction:column;overflow:hidden;min-height:420px}
+  .previa{grid-area:previa;display:flex;flex-direction:column;overflow:hidden;align-self:start}
   .previa .topo{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px 8px;flex-wrap:wrap}
   .previa .topo b{color:var(--lilas);font-size:14px;letter-spacing:.08em;text-transform:uppercase}
   .previa .topo span{color:var(--suave);font-size:12px}
-  .tela{flex:1;margin:0 14px 14px;border-radius:16px;overflow:hidden;min-height:340px;
+  .tela{position:relative;width:calc(100% - 28px);max-width:560px;aspect-ratio:16/9;margin:0 auto 14px;border-radius:16px;overflow:hidden;
     background:repeating-conic-gradient(#1c1930 0 25%,#15132a 0 50%) 0 0/26px 26px}
-  .tela iframe{width:100%;height:100%;border:0;background:transparent;display:block}
+  .tela iframe{position:absolute;left:0;top:0;width:960px;height:540px;border:0;background:transparent;transform-origin:0 0}
   .lateral{grid-area:lateral;display:flex;flex-direction:column;gap:18px}
   .lateral .moldura,.guia .moldura{padding:16px 20px 18px}
   .moldura h2{margin:0 0 6px;font-size:14px;font-weight:700;color:var(--lilas);text-transform:uppercase;letter-spacing:.1em}
@@ -267,6 +267,8 @@ function montarUrl(extra) {
   return BASE + '?s=' + c.replace(/%/g, '%25').replace(/%25([0-9A-F]{2})/g, '%$1') + (rest ? '&' + rest : '');
 }
 let tPrev;
+function escalar() { const t = document.querySelector('.tela'); if (t) $('prev').style.transform = 'scale(' + (t.clientWidth / 960) + ')'; }
+addEventListener('resize', escalar);
 function atualizar() {
   lerDaTela(); gravar(KCFG, cfg);
   $('bordaV').textContent = cfg.borda + ' px'; $('raioV').textContent = cfg.raio + ' px'; $('volV').textContent = cfg.vol + '%';
@@ -311,7 +313,7 @@ function estado() {
   $('entrar').style.display = ok ? 'none' : '';   // conectado: só "Sair"; desconectado: só "Entrar"
   $('sair').style.display = ok ? '' : 'none';
 }
-aplicarNaTela(); atualizar(); estado();
+aplicarNaTela(); atualizar(); estado(); escalar();
 /* conectado: descobre o nome do canal da conta e preenche o campo (se estiver vazio) */
 async function preencherCanal() {
   const k = ler(KTOK); if (!k || !k.t) return;
