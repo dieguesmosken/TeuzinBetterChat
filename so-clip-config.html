@@ -18,10 +18,10 @@
   .abas a:hover{filter:brightness(1.2)}
   .abas a.on{background:linear-gradient(135deg,var(--roxo),var(--lilas));color:#fff;border-color:transparent;box-shadow:0 4px 16px rgba(123,44,242,.4)}
   .quadro{display:grid;gap:18px;padding:18px 22px 22px;
-    grid-template-columns:minmax(0,1fr) 400px;grid-template-rows:auto auto auto 1fr;
-    grid-template-areas:"barra lateral" "previa lateral" "guia lateral" "folga lateral"}
+    grid-template-columns:minmax(0,1fr) 400px;grid-template-rows:auto auto auto auto 1fr;
+    grid-template-areas:"barra lateral" "previa lateral" "extras lateral" "guia lateral" "folga lateral"}
   @media(max-width:1000px){.quadro{grid-template-columns:1fr;grid-template-rows:auto;
-    grid-template-areas:"barra" "lateral" "previa" "guia"}}
+    grid-template-areas:"barra" "lateral" "previa" "extras" "guia"}}
   .moldura{border:var(--borda) solid var(--roxo);border-radius:28px;background:rgba(10,6,24,.92);box-shadow:0 0 28px rgba(123,44,242,.35)}
   .previa{grid-area:previa;display:flex;flex-direction:column;overflow:hidden;align-self:start}
   .previa .topo{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px 8px;flex-wrap:wrap}
@@ -74,6 +74,9 @@
   .dica b{color:#fff}
   .st{display:inline-block;padding:3px 12px;border-radius:99px;font-size:12.5px;font-weight:700;background:#2a2a38}
   .st.ok{background:#1d3a2e;color:var(--ok)} .st.no{background:#3a2323;color:var(--erro)}
+  .extras{grid-area:extras;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start;min-width:0}
+  .extras .moldura{padding:16px 20px 18px}
+  @media(max-width:1000px){.extras{grid-template-columns:minmax(0,1fr)}}
   .guia{grid-area:guia;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:18px;align-items:start;min-width:0}
   @media(max-width:1400px){.guia{grid-template-columns:minmax(0,1fr)}}
   .passos{margin:6px 0 0;padding-left:20px;font-size:13.5px;color:#e6dcff} .passos li{margin:7px 0}
@@ -141,21 +144,6 @@
       <p class="dica">No OBS, marque <b>Controlar áudio via OBS</b> na fonte. Para o jogo abaixar quando o clip tocar, use um filtro <b>Compressor</b> com sidechain (veja o guia abaixo).</p>
     </section>
 
-    <section class="moldura">
-      <h2>Login da Twitch</h2>
-      <p class="dica" style="margin:0 0 8px">Estado neste navegador: <span id="st" class="st">verificando…</span></p>
-      <div class="btns">
-        <button id="entrar" type="button">Entrar com a Twitch</button>
-        <button class="sec" id="sair" type="button">Sair</button>
-      </div>
-      <p class="dica">O login serve só para buscar clips (nenhuma permissão de escrita). O navegador do OBS guarda o login <b>separado</b> do seu navegador: veja o passo 3 do guia.</p>
-    </section>
-
-    <section class="moldura">
-      <h2>Endereço do worker</h2>
-      <input type="text" id="worker" autocomplete="off" spellcheck="false">
-      <p class="dica">Deixe o padrão ou use o seu (<a href="https://github.com/dieguesmosken/TeuzinBetterChat/blob/main/SO-CLIP.md" target="_blank" rel="noopener">guia</a>).</p>
-    </section>
   </aside>
 
   <footer class="barra">
@@ -176,6 +164,24 @@
       <p class="dica">No OBS: Fonte → Navegador → cole a URL. Largura <b>960</b>, altura <b>540</b>.</p>
     </div>
   </footer>
+
+  <div class="extras">
+    <section class="moldura">
+    <h2>Login da Twitch</h2>
+    <p class="dica" style="margin:0 0 8px">Estado neste navegador: <span id="st" class="st">verificando…</span></p>
+    <div class="btns">
+      <button id="entrar" type="button">Entrar com a Twitch</button>
+      <button class="sec" id="sair" type="button">Sair</button>
+    </div>
+    <p class="dica">O login serve só para buscar clips (nenhuma permissão de escrita). O navegador do OBS guarda o login <b>separado</b> do seu navegador: veja o passo 3 do guia.</p>
+  </section>
+
+  <section class="moldura">
+    <h2>Endereço do worker</h2>
+    <input type="text" id="worker" autocomplete="off" spellcheck="false">
+    <p class="dica">Deixe o padrão ou use o seu (<a href="https://github.com/dieguesmosken/TeuzinBetterChat/blob/main/SO-CLIP.md" target="_blank" rel="noopener">guia</a>).</p>
+  </section>
+  </div>
 
   <div class="guia">
     <section class="moldura">
